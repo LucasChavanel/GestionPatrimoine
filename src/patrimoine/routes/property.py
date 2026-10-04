@@ -26,6 +26,12 @@ def _parse_optional_int(value: str | None) -> int | None:
     return int(value)
 
 
+def _parse_optional_float(value: str | None) -> float | None:
+    if not value:
+        return None
+    return float(value)
+
+
 @router_liste.get("")
 def liste(request: Request, session: Session = Depends(get_session)):
     properties = session.exec(select(Property).order_by(Property.nom)).all()
@@ -101,6 +107,8 @@ def enregistrer(
     date_classement: str | None = Form(None),
     numero_declaration_mairie: str | None = Form(None),
     date_premiere_mise_en_location: str | None = Form(None),
+    valeur_estimee: str | None = Form(None),
+    valeur_estimee_date: str | None = Form(None),
 ):
     property_.nom = nom
     property_.adresse = adresse
@@ -116,6 +124,8 @@ def enregistrer(
     property_.date_classement = _parse_optional_date(date_classement)
     property_.numero_declaration_mairie = numero_declaration_mairie or None
     property_.date_premiere_mise_en_location = _parse_optional_date(date_premiere_mise_en_location)
+    property_.valeur_estimee = _parse_optional_float(valeur_estimee)
+    property_.valeur_estimee_date = _parse_optional_date(valeur_estimee_date)
 
     session.add(property_)
     session.commit()

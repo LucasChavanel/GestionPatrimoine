@@ -8,6 +8,8 @@ from ..deps import templates
 from ..fiscal.loader import load_fiscal_params
 from ..models import AppSettings, Booking, Expense, Property
 from ..models.enums import StatutBooking
+from ..models.patrimoine_snapshot import PatrimoineSnapshot
+from ..services.patrimoine_global import compute_consolide, enregistrer_snapshot_du_jour
 
 router = APIRouter()
 
@@ -64,6 +66,13 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
 
     settings = session.get(AppSettings, 1)
 
+    params = load_fiscal_params(annee)
+    consolide = compute_consolide(session, params)
+    enregistrer_snapshot_du_jour(session, consolide)
+    historique = session.exec(
+        select(PatrimoineSnapshot).order_by(PatrimoineSnapshot.date_snapshot)
+    ).all()
+
     return templates.TemplateResponse(
         request,
         "dashboard.html",
@@ -73,5 +82,7 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
             "prochaines_reservations": prochaines_reservations,
             "last_backup_at": settings.last_backup_at if settings else None,
             "avertissements": avertissements,
+            "consolide": consolide,
+            "historique": historique,
         },
     )

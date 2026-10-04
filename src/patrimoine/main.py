@@ -15,6 +15,7 @@ from .routes import (
     agencies,
     attachments,
     bookings,
+    cash_holdings,
     dashboard,
     expenses,
     immobilisations,
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(securities.router)
     app.include_router(investments_liste_router)
     app.include_router(investments_compte_router)
+    app.include_router(cash_holdings.router)
     return app
 
 

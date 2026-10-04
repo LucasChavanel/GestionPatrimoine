@@ -92,6 +92,13 @@ class Pea(BaseModel):
     verified: bool = False
 
 
+class PatrimoineGlobalParams(BaseModel):
+    part_us_dans_world: float
+    part_europe_dans_world: float
+    source: str
+    verified: bool = False
+
+
 class FiscalParams(BaseModel):
     year: int
     meuble_tourisme: MeubleTourisme
@@ -100,6 +107,7 @@ class FiscalParams(BaseModel):
     categories_charges: dict[str, TraitementCategorieCharge] = {}
     cases_declaration: dict = {}
     pea: Pea | None = None
+    patrimoine_global: PatrimoineGlobalParams | None = None
 
     def _avertissement_prelevements_sociaux(self) -> list[str]:
         if self.prelevements_sociaux.verified:
@@ -144,6 +152,12 @@ class FiscalParams(BaseModel):
             return []
         return [f"PEA {self.year} : paramètres non vérifiés ({self.pea.source})"]
 
+    def unverified_warnings_patrimoine_global(self) -> list[str]:
+        """Avertissements pertinents pour le dashboard consolidé (exposition géo)."""
+        if self.patrimoine_global is None or self.patrimoine_global.verified:
+            return []
+        return [f"Patrimoine global {self.year} : paramètres non vérifiés ({self.patrimoine_global.source})"]
+
     def unverified_warnings(self) -> list[str]:
         """Vue d'ensemble (dashboard) : tous les avertissements, toutes familles
         confondues — pas de notion de bien précis à ce niveau."""
@@ -152,6 +166,9 @@ class FiscalParams(BaseModel):
             if w not in warnings:
                 warnings.append(w)
         for w in self.unverified_warnings_pea():
+            if w not in warnings:
+                warnings.append(w)
+        for w in self.unverified_warnings_patrimoine_global():
             if w not in warnings:
                 warnings.append(w)
         return warnings

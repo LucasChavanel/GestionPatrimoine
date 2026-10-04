@@ -11,6 +11,42 @@
     {% endfor %}
 </ul>
 {% endif %}
+
+<section>
+    <h2>Patrimoine global</h2>
+    <section class="summary-cards">
+        <div class="card">
+            <h2>Actions</h2>
+            <p class="amount">{{ "%.2f"|format(consolide.valeur_actions) }} €</p>
+        </div>
+        <div class="card">
+            <h2>Cash</h2>
+            <p class="amount">{{ "%.2f"|format(consolide.valeur_cash) }} €</p>
+        </div>
+        <div class="card">
+            <h2>Immobilier</h2>
+            <p class="amount">{{ "%.2f"|format(consolide.valeur_immobilier) }} €</p>
+        </div>
+        <div class="card">
+            <h2>Or</h2>
+            <p class="amount">{{ "%.2f"|format(consolide.valeur_or) }} €</p>
+        </div>
+    </section>
+    <p><strong>Total : {{ "%.2f"|format(consolide.valeur_totale) }} €</strong></p>
+
+    {% if consolide.pct_us is not none %}
+    <h3>Exposition géographique estimée (sur la poche actions)</h3>
+    <p>
+        US : {{ "%.1f"|format(consolide.pct_us * 100) }} % —
+        Europe : {{ "%.1f"|format(consolide.pct_europe * 100) }} % —
+        Émergents : {{ "%.1f"|format(consolide.pct_emergents * 100) }} %
+    </p>
+    {% endif %}
+
+    {% if historique|length > 1 %}
+    <div class="chart-container"><canvas id="chart-patrimoine"></canvas></div>
+    {% endif %}
+</section>
 {% if resumes_par_bien %}
 {% for r in resumes_par_bien %}
 <h2><a href="/biens/{{ r.property_.id }}">{{ r.property_.nom }}</a></h2>
@@ -62,4 +98,24 @@
         {% if last_backup_at %}{{ last_backup_at }}{% else %}jamais effectuée{% endif %}
     </p>
 </section>
+
+{% if historique|length > 1 %}
+<script src="/static/js/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('chart-patrimoine');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ historique | map(attribute='date_snapshot') | map('string') | list | tojson }},
+            datasets: [{
+                label: 'Valeur totale (€)',
+                data: {{ historique | map(attribute='valeur_totale') | list | tojson }},
+                borderColor: '#2f5d50',
+                tension: 0.1,
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+</script>
+{% endif %}
 {% endblock %}

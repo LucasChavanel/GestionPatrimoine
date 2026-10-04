@@ -105,4 +105,6 @@ class TypeTransaction(str, Enum):
 class AllocationCategorie(str, Enum):
     world = "world"
     europe = "europe"
+    emergents = "emergents"
+    or_metal = "or_metal"
     autre = "autre"
