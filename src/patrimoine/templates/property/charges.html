@@ -18,7 +18,7 @@
     </label>
 </form>
 
-<canvas id="chart-charges" height="100"></canvas>
+<div class="chart-container"><canvas id="chart-charges"></canvas></div>
 <p><strong>Total {{ annee }} : {{ "%.2f"|format(total_annee) }} €</strong></p>
 
 <h2>{% if expense_edit %}Modifier la charge{% else %}Ajouter une charge{% endif %}</h2>
@@ -96,7 +96,7 @@
                 backgroundColor: ['#2f5d50','#8a5a00','#4a6b8a','#a33f3f','#6b4a8a','#3f8a6b','#8a6b3f','#555','#2f8d9a','#9a2f6a','#6a9a2f','#9a6a2f'],
             }]
         },
-        options: { responsive: true }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 </script>
 {% endif %}

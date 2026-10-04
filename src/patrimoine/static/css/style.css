@@ -118,6 +118,12 @@ form button {
     margin: 0;
 }
 
+.chart-container {
+    position: relative;
+    height: 280px;
+    margin-bottom: 1.5rem;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
