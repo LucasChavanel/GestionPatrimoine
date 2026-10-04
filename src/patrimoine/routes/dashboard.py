@@ -1,12 +1,10 @@
-from __future__ import annotations
-
 from datetime import date
 
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..deps import get_the_property, templates
+from ..deps import templates
 from ..fiscal.loader import load_fiscal_params
 from ..models import AppSettings, Booking, Expense, Property
 from ..models.enums import StatutBooking
@@ -18,15 +16,14 @@ router = APIRouter()
 def dashboard(request: Request, session: Session = Depends(get_session)):
     annee = date.today().year
 
-    property_ = get_the_property(session)
-    property_ids = session.exec(select(Property.id)).all()
+    properties = session.exec(select(Property).order_by(Property.nom)).all()
 
-    recettes_annee = 0.0
-    charges_annee = 0.0
+    resumes_par_bien = []
     prochaines_reservations: list[Booking] = []
+    avertissements = list(load_fiscal_params(annee).unverified_warnings())
 
-    if property_ids:
-        bookings = session.exec(select(Booking).where(Booking.property_id.in_(property_ids))).all()
+    for property_ in properties:
+        bookings = session.exec(select(Booking).where(Booking.property_id == property_.id)).all()
         # Comptabilité de caisse : recette reconnue à l'encaissement (date_paiement),
         # pas à la date du séjour. Voir services/simulator.py pour la même logique.
         recettes_annee = sum(
@@ -36,34 +33,38 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
             and b.date_paiement is not None
             and b.date_paiement.year == annee
         )
-        prochaines_reservations = sorted(
-            (
-                b
-                for b in bookings
-                if b.statut == StatutBooking.confirmee and b.date_depart >= date.today()
-            ),
-            key=lambda b: b.date_arrivee,
-        )[:5]
-
-        expenses = session.exec(select(Expense).where(Expense.property_id.in_(property_ids))).all()
+        expenses = session.exec(select(Expense).where(Expense.property_id == property_.id)).all()
         charges_annee = sum(e.montant_ttc for e in expenses if e.date.year == annee)
 
-    resultat_annee = recettes_annee - charges_annee
+        resumes_par_bien.append(
+            {
+                "property_": property_,
+                "recettes_annee": recettes_annee,
+                "charges_annee": charges_annee,
+                "resultat_annee": recettes_annee - charges_annee,
+            }
+        )
+
+        prochaines_reservations.extend(
+            b
+            for b in bookings
+            if b.statut == StatutBooking.confirmee and b.date_depart >= date.today()
+        )
+
+        if not property_.numero_declaration_mairie:
+            avertissements.append(f"{property_.nom} : numéro de déclaration en mairie non renseigné.")
+
+    prochaines_reservations.sort(key=lambda b: b.date_arrivee)
+    prochaines_reservations = prochaines_reservations[:5]
 
     settings = session.get(AppSettings, 1)
-
-    avertissements = list(load_fiscal_params(annee).unverified_warnings())
-    if property_ is not None and not property_.numero_declaration_mairie:
-        avertissements.append("Numéro de déclaration en mairie non renseigné.")
 
     return templates.TemplateResponse(
         request,
         "dashboard.html",
         {
             "annee": annee,
-            "recettes_annee": recettes_annee,
-            "charges_annee": charges_annee,
-            "resultat_annee": resultat_annee,
+            "resumes_par_bien": resumes_par_bien,
             "prochaines_reservations": prochaines_reservations,
             "last_backup_at": settings.last_backup_at if settings else None,
             "avertissements": avertissements,

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import calendar
 from datetime import date
 
@@ -8,12 +6,13 @@ from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..deps import get_the_property, templates
+from ..deps import get_property_or_404, templates
 from ..models.agency import Agency
 from ..models.booking import Booking
 from ..models.enums import Plateforme, ReversementTaxeSejour, StatutBooking
+from ..models.property import Property
 
-router = APIRouter(prefix="/appartement/reservations")
+router = APIRouter(prefix="/biens/{property_id}/reservations")
 
 
 def _recettes_encaissees_par_mois(bookings: list[Booking], annee: int) -> list[float]:
@@ -31,17 +30,18 @@ def _recettes_encaissees_par_mois(bookings: list[Booking], annee: int) -> list[f
 
 
 @router.get("")
-def liste(request: Request, annee: int | None = None, session: Session = Depends(get_session)):
-    property_ = get_the_property(session)
+def liste(
+    property_id: int,
+    request: Request,
+    annee: int | None = None,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     annee = annee or date.today().year
 
-    bookings: list[Booking] = []
-    if property_ is not None:
-        bookings = session.exec(
-            select(Booking)
-            .where(Booking.property_id == property_.id)
-            .order_by(Booking.date_arrivee)
-        ).all()
+    bookings = session.exec(
+        select(Booking).where(Booking.property_id == property_id).order_by(Booking.date_arrivee)
+    ).all()
 
     bookings_annee = [b for b in bookings if b.date_arrivee.year == annee]
 
@@ -77,18 +77,19 @@ def liste(request: Request, annee: int | None = None, session: Session = Depends
 
 
 @router.get("/{booking_id}/modifier")
-def modifier_formulaire(booking_id: int, request: Request, session: Session = Depends(get_session)):
-    property_ = get_the_property(session)
+def modifier_formulaire(
+    property_id: int,
+    booking_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     booking_edit = session.get(Booking, booking_id)
     annee = booking_edit.date_arrivee.year if booking_edit else date.today().year
 
-    bookings: list[Booking] = []
-    if property_ is not None:
-        bookings = session.exec(
-            select(Booking)
-            .where(Booking.property_id == property_.id)
-            .order_by(Booking.date_arrivee)
-        ).all()
+    bookings = session.exec(
+        select(Booking).where(Booking.property_id == property_id).order_by(Booking.date_arrivee)
+    ).all()
     bookings_annee = [b for b in bookings if b.date_arrivee.year == annee]
     annees_disponibles = sorted({b.date_arrivee.year for b in bookings}) or [annee]
     agencies = session.exec(select(Agency).order_by(Agency.nom)).all()
@@ -144,7 +145,9 @@ def _form_to_booking(
 
 @router.post("")
 def creer(
+    property_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     date_arrivee: str = Form(...),
     date_depart: str = Form(...),
     plateforme: Plateforme = Form(...),
@@ -158,11 +161,7 @@ def creer(
     statut: StatutBooking = Form(StatutBooking.confirmee),
     notes: str | None = Form(None),
 ):
-    property_ = get_the_property(session)
-    if property_ is None or property_.id is None:
-        return RedirectResponse(url="/appartement", status_code=303)
-
-    booking = Booking(property_id=property_.id, date_arrivee=date.today(), date_depart=date.today())
+    booking = Booking(property_id=property_id, date_arrivee=date.today(), date_depart=date.today())
     _form_to_booking(
         booking,
         date_arrivee,
@@ -180,13 +179,17 @@ def creer(
     )
     session.add(booking)
     session.commit()
-    return RedirectResponse(url=f"/appartement/reservations?annee={booking.date_arrivee.year}", status_code=303)
+    return RedirectResponse(
+        url=f"/biens/{property_id}/reservations?annee={booking.date_arrivee.year}", status_code=303
+    )
 
 
 @router.post("/{booking_id}")
 def modifier(
+    property_id: int,
     booking_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     date_arrivee: str = Form(...),
     date_depart: str = Form(...),
     plateforme: Plateforme = Form(...),
@@ -202,7 +205,7 @@ def modifier(
 ):
     booking = session.get(Booking, booking_id)
     if booking is None:
-        return RedirectResponse(url="/appartement/reservations", status_code=303)
+        return RedirectResponse(url=f"/biens/{property_id}/reservations", status_code=303)
     _form_to_booking(
         booking,
         date_arrivee,
@@ -220,14 +223,21 @@ def modifier(
     )
     session.add(booking)
     session.commit()
-    return RedirectResponse(url=f"/appartement/reservations?annee={booking.date_arrivee.year}", status_code=303)
+    return RedirectResponse(
+        url=f"/biens/{property_id}/reservations?annee={booking.date_arrivee.year}", status_code=303
+    )
 
 
 @router.post("/{booking_id}/supprimer")
-def supprimer(booking_id: int, session: Session = Depends(get_session)):
+def supprimer(
+    property_id: int,
+    booking_id: int,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     booking = session.get(Booking, booking_id)
     annee = booking.date_arrivee.year if booking else date.today().year
     if booking is not None:
         session.delete(booking)
         session.commit()
-    return RedirectResponse(url=f"/appartement/reservations?annee={annee}", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}/reservations?annee={annee}", status_code=303)

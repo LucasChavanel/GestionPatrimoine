@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections import defaultdict
 from datetime import date
 
@@ -8,13 +6,14 @@ from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..deps import get_the_property, templates
+from ..deps import get_property_or_404, templates
 from ..models.enums import CategorieCharge, EntityType, Recurrence
 from ..models.expense import Expense
+from ..models.property import Property
 from ..services.attachments import list_attachments
 from ..services.recurrence import generate_occurrences
 
-router = APIRouter(prefix="/appartement/charges")
+router = APIRouter(prefix="/biens/{property_id}/charges")
 
 
 def _attachments_by_expense(session: Session, expenses: list[Expense]) -> dict[int, list]:
@@ -22,15 +21,18 @@ def _attachments_by_expense(session: Session, expenses: list[Expense]) -> dict[i
 
 
 @router.get("")
-def liste(request: Request, annee: int | None = None, session: Session = Depends(get_session)):
-    property_ = get_the_property(session)
+def liste(
+    property_id: int,
+    request: Request,
+    annee: int | None = None,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     annee = annee or date.today().year
 
-    expenses: list[Expense] = []
-    if property_ is not None:
-        expenses = session.exec(
-            select(Expense).where(Expense.property_id == property_.id).order_by(Expense.date)
-        ).all()
+    expenses = session.exec(
+        select(Expense).where(Expense.property_id == property_id).order_by(Expense.date)
+    ).all()
 
     expenses_annee = [e for e in expenses if e.date.year == annee]
 
@@ -55,22 +57,25 @@ def liste(request: Request, annee: int | None = None, session: Session = Depends
             "total_annee": total_annee,
             "expense_edit": None,
             "attachments_by_expense": _attachments_by_expense(session, expenses_annee),
-            "redirect_to": f"/appartement/charges?annee={annee}",
+            "redirect_to": f"/biens/{property_id}/charges?annee={annee}",
         },
     )
 
 
 @router.get("/{expense_id}/modifier")
-def modifier_formulaire(expense_id: int, request: Request, session: Session = Depends(get_session)):
-    property_ = get_the_property(session)
+def modifier_formulaire(
+    property_id: int,
+    expense_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     expense_edit = session.get(Expense, expense_id)
     annee = expense_edit.date.year if expense_edit else date.today().year
 
-    expenses: list[Expense] = []
-    if property_ is not None:
-        expenses = session.exec(
-            select(Expense).where(Expense.property_id == property_.id).order_by(Expense.date)
-        ).all()
+    expenses = session.exec(
+        select(Expense).where(Expense.property_id == property_id).order_by(Expense.date)
+    ).all()
     expenses_annee = [e for e in expenses if e.date.year == annee]
     totaux_categorie: dict[str, float] = defaultdict(float)
     for e in expenses_annee:
@@ -91,7 +96,7 @@ def modifier_formulaire(expense_id: int, request: Request, session: Session = De
             "total_annee": sum(totaux_categorie.values()),
             "expense_edit": expense_edit,
             "attachments_by_expense": _attachments_by_expense(session, expenses_annee),
-            "redirect_to": f"/appartement/charges?annee={annee}",
+            "redirect_to": f"/biens/{property_id}/charges?annee={annee}",
         },
     )
 
@@ -115,7 +120,9 @@ def _form_to_expense(
 
 @router.post("")
 def creer(
+    property_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     date_: str = Form(..., alias="date"),
     montant_ttc: float = Form(...),
     fournisseur: str | None = Form(None),
@@ -123,21 +130,19 @@ def creer(
     categorie: CategorieCharge = Form(...),
     recurrence: Recurrence = Form(Recurrence.aucune),
 ):
-    property_ = get_the_property(session)
-    if property_ is None or property_.id is None:
-        return RedirectResponse(url="/appartement", status_code=303)
-
-    expense = Expense(property_id=property_.id, date=date.today(), montant_ttc=0, categorie=categorie)
+    expense = Expense(property_id=property_id, date=date.today(), montant_ttc=0, categorie=categorie)
     _form_to_expense(expense, date_, montant_ttc, fournisseur, description, categorie, recurrence)
     session.add(expense)
     session.commit()
-    return RedirectResponse(url=f"/appartement/charges?annee={expense.date.year}", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}/charges?annee={expense.date.year}", status_code=303)
 
 
 @router.post("/{expense_id}")
 def modifier(
+    property_id: int,
     expense_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     date_: str = Form(..., alias="date"),
     montant_ttc: float = Form(...),
     fournisseur: str | None = Form(None),
@@ -147,31 +152,38 @@ def modifier(
 ):
     expense = session.get(Expense, expense_id)
     if expense is None:
-        return RedirectResponse(url="/appartement/charges", status_code=303)
+        return RedirectResponse(url=f"/biens/{property_id}/charges", status_code=303)
     _form_to_expense(expense, date_, montant_ttc, fournisseur, description, categorie, recurrence)
     session.add(expense)
     session.commit()
-    return RedirectResponse(url=f"/appartement/charges?annee={expense.date.year}", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}/charges?annee={expense.date.year}", status_code=303)
 
 
 @router.post("/{expense_id}/supprimer")
-def supprimer(expense_id: int, session: Session = Depends(get_session)):
+def supprimer(
+    property_id: int,
+    expense_id: int,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     expense = session.get(Expense, expense_id)
     annee = expense.date.year if expense else date.today().year
     if expense is not None:
         session.delete(expense)
         session.commit()
-    return RedirectResponse(url=f"/appartement/charges?annee={annee}", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}/charges?annee={annee}", status_code=303)
 
 
 @router.post("/{expense_id}/generer")
 def generer(
+    property_id: int,
     expense_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     jusqu_au: str = Form(...),
 ):
     template = session.get(Expense, expense_id)
     if template is None:
-        return RedirectResponse(url="/appartement/charges", status_code=303)
+        return RedirectResponse(url=f"/biens/{property_id}/charges", status_code=303)
     generate_occurrences(session, template, date.fromisoformat(jusqu_au))
-    return RedirectResponse(url=f"/appartement/charges?annee={template.date.year}", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}/charges?annee={template.date.year}", status_code=303)

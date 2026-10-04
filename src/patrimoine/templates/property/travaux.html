@@ -4,18 +4,14 @@
 {% include "property/_subnav.html" %}
 <h1>Travaux &amp; mobilier</h1>
 
-{% if not property_ %}
-<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
-{% else %}
-
-<form method="get" action="/appartement/travaux">
+<form method="get" action="/biens/{{ property_.id }}/travaux">
     <label>Année (pour le tableau d'amortissement prévisionnel)
         <input type="number" name="annee" value="{{ annee }}" onchange="this.form.submit()">
     </label>
 </form>
 
 <h2>Travaux</h2>
-<form method="post" action="/appartement/travaux/works">
+<form method="post" action="/biens/{{ property_.id }}/travaux/works">
     <label>Date <input type="date" name="date" required></label>
     <label>Montant TTC (€) <input type="number" step="0.01" name="montant_ttc" required></label>
     <label>Fournisseur / artisan <input type="text" name="fournisseur"></label>
@@ -62,7 +58,7 @@
                 {% include "_attachments.html" %}
             </td>
             <td>
-                <form method="post" action="/appartement/travaux/works/{{ w.id }}/supprimer" style="display:inline">
+                <form method="post" action="/biens/{{ property_.id }}/travaux/works/{{ w.id }}/supprimer" style="display:inline">
                     <button type="submit">Supprimer</button>
                 </form>
             </td>
@@ -75,7 +71,7 @@
 {% endif %}
 
 <h2>Mobilier et équipement</h2>
-<form method="post" action="/appartement/travaux/furniture">
+<form method="post" action="/biens/{{ property_.id }}/travaux/furniture">
     <label>Date d'achat <input type="date" name="date_achat" required></label>
     <label>Montant TTC (€) <input type="number" step="0.01" name="montant_ttc" required></label>
     <label>Description <input type="text" name="description"></label>
@@ -102,7 +98,7 @@
                 {% include "_attachments.html" %}
             </td>
             <td>
-                <form method="post" action="/appartement/travaux/furniture/{{ f.id }}/supprimer" style="display:inline">
+                <form method="post" action="/biens/{{ property_.id }}/travaux/furniture/{{ f.id }}/supprimer" style="display:inline">
                     <button type="submit">Supprimer</button>
                 </form>
             </td>
@@ -114,5 +110,4 @@
 <p>Aucun mobilier renseigné.</p>
 {% endif %}
 
-{% endif %}
 {% endblock %}

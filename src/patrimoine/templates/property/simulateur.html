@@ -5,17 +5,11 @@
 <h1>Simulateur fiscal</h1>
 <p class="disclaimer">⚠️ Estimation indicative — à valider avec un professionnel.</p>
 
-{% if not property_ %}
-<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
-{% else %}
-
-<form method="get" action="/appartement/simulateur">
+<form method="get" action="/biens/{{ property_.id }}/simulateur">
     <label>Année <input type="number" name="annee" value="{{ annee }}"></label>
     <label>TMI (%) <input type="number" step="0.1" name="tmi_pct" value="{{ tmi_pct }}"></label>
     <button type="submit">Simuler</button>
 </form>
-
-{% if result %}
 
 {% if result.avertissements %}
 <ul class="warning">
@@ -89,7 +83,4 @@
     <li>Cumul des amortissements pratiqués depuis le début (réintégrés dans la plus-value à la revente, réforme 2025) : {{ "%.2f"|format(result.reel.cumul_amortissements_pratiques) }} €</li>
 </ul>
 <p>Le régime réel implique une liasse fiscale, en général établie par un expert-comptable ou un service spécialisé ; ce coût est lui-même une charge déductible.</p>
-
-{% endif %}
-{% endif %}
 {% endblock %}

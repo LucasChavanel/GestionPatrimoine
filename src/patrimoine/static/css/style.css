@@ -35,6 +35,16 @@ main {
     padding: 0 1rem;
 }
 
+.current-property {
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.current-property a {
+    color: var(--color-accent);
+}
+
 .sub-nav {
     display: flex;
     gap: 1rem;

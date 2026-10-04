@@ -5,10 +5,11 @@ from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..deps import get_the_property, templates
+from ..deps import get_property_or_404, templates
 from ..models.booking import Booking
+from ..models.property import Property
 
-router = APIRouter(prefix="/appartement/calendrier")
+router = APIRouter(prefix="/biens/{property_id}/calendrier")
 
 NOMS_MOIS = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -18,19 +19,18 @@ NOMS_MOIS = [
 
 @router.get("")
 def calendrier(
+    property_id: int,
     request: Request,
     annee: int | None = None,
     mois: int | None = None,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
 ):
     today = date.today()
     annee = annee or today.year
     mois = mois or today.month
 
-    property_ = get_the_property(session)
-    bookings: list[Booking] = []
-    if property_ is not None:
-        bookings = session.exec(select(Booking).where(Booking.property_id == property_.id)).all()
+    bookings = session.exec(select(Booking).where(Booking.property_id == property_id)).all()
 
     semaines = calendar.monthcalendar(annee, mois)
     grille = []

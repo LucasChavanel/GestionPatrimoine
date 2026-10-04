@@ -1,18 +1,17 @@
-from __future__ import annotations
-
 from datetime import date
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from ..db import get_session
-from ..deps import get_the_property, templates
+from ..deps import get_property_or_404, templates
 from ..fiscal.loader import load_fiscal_params
 from ..models.enums import NatureComposant, StatutClassement
 from ..models.property import BuildingComponent, Property
 
-router = APIRouter(prefix="/appartement")
+router_liste = APIRouter(prefix="/biens")
+router_fiche = APIRouter(prefix="/biens/{property_id}")
 
 
 def _parse_optional_date(value: str | None) -> date | None:
@@ -27,9 +26,43 @@ def _parse_optional_int(value: str | None) -> int | None:
     return int(value)
 
 
-@router.get("")
-def fiche(request: Request, session: Session = Depends(get_session)):
-    property_ = get_the_property(session)
+@router_liste.get("")
+def liste(request: Request, session: Session = Depends(get_session)):
+    properties = session.exec(select(Property).order_by(Property.nom)).all()
+    return templates.TemplateResponse(request, "property/liste.html", {"properties": properties})
+
+
+@router_liste.post("")
+def creer(
+    session: Session = Depends(get_session),
+    nom: str = Form(...),
+    adresse: str = Form(...),
+    surface: float = Form(...),
+    date_acquisition: str = Form(...),
+    prix_acquisition: float = Form(...),
+    frais_notaire: float = Form(0.0),
+    part_terrain_pct: float = Form(0.0),
+):
+    property_ = Property(
+        nom=nom,
+        adresse=adresse,
+        surface=surface,
+        date_acquisition=date.fromisoformat(date_acquisition),
+        prix_acquisition=prix_acquisition,
+        frais_notaire=frais_notaire,
+        part_terrain_pct=part_terrain_pct,
+    )
+    session.add(property_)
+    session.commit()
+    session.refresh(property_)
+    return RedirectResponse(url=f"/biens/{property_.id}", status_code=303)
+
+
+@router_fiche.get("")
+def fiche(
+    request: Request,
+    property_: Property = Depends(get_property_or_404),
+):
     fiscal_params = load_fiscal_params(date.today().year)
     return templates.TemplateResponse(
         request,
@@ -42,10 +75,11 @@ def fiche(request: Request, session: Session = Depends(get_session)):
     )
 
 
-@router.post("")
+@router_fiche.post("")
 def enregistrer(
-    request: Request,
+    property_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     nom: str = Form(...),
     adresse: str = Form(...),
     surface: float = Form(...),
@@ -59,16 +93,6 @@ def enregistrer(
     numero_declaration_mairie: str | None = Form(None),
     date_premiere_mise_en_location: str | None = Form(None),
 ):
-    property_ = get_the_property(session)
-    if property_ is None:
-        property_ = Property(
-            nom=nom,
-            adresse=adresse,
-            surface=surface,
-            date_acquisition=date.fromisoformat(date_acquisition),
-            prix_acquisition=prix_acquisition,
-        )
-
     property_.nom = nom
     property_.adresse = adresse
     property_.surface = surface
@@ -84,35 +108,38 @@ def enregistrer(
 
     session.add(property_)
     session.commit()
-    return RedirectResponse(url="/appartement", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}", status_code=303)
 
 
-@router.post("/composants")
+@router_fiche.post("/composants")
 def ajouter_composant(
+    property_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     nature: NatureComposant = Form(...),
     part_du_prix_pct: float = Form(...),
     duree_amortissement: int = Form(...),
 ):
-    property_ = get_the_property(session)
-    if property_ is None or property_.id is None:
-        return RedirectResponse(url="/appartement", status_code=303)
-
     composant = BuildingComponent(
-        property_id=property_.id,
+        property_id=property_id,
         nature=nature,
         part_du_prix_pct=part_du_prix_pct,
         duree_amortissement=duree_amortissement,
     )
     session.add(composant)
     session.commit()
-    return RedirectResponse(url="/appartement", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}", status_code=303)
 
 
-@router.post("/composants/{composant_id}/supprimer")
-def supprimer_composant(composant_id: int, session: Session = Depends(get_session)):
+@router_fiche.post("/composants/{composant_id}/supprimer")
+def supprimer_composant(
+    property_id: int,
+    composant_id: int,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     composant = session.get(BuildingComponent, composant_id)
     if composant is not None:
         session.delete(composant)
         session.commit()
-    return RedirectResponse(url="/appartement", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}", status_code=303)

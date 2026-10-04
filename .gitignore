@@ -13,5 +13,6 @@ build/
 *.db-shm
 /data/
 /documents/
+/Résidence le Soleil/
 
 .DS_Store

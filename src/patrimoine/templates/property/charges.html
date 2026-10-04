@@ -4,11 +4,7 @@
 {% include "property/_subnav.html" %}
 <h1>Charges</h1>
 
-{% if not property_ %}
-<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
-{% else %}
-
-<form method="get" action="/appartement/charges">
+<form method="get" action="/biens/{{ property_.id }}/charges">
     <label>Année
         <select name="annee" onchange="this.form.submit()">
             {% for a in annees_disponibles %}
@@ -22,7 +18,7 @@
 <p><strong>Total {{ annee }} : {{ "%.2f"|format(total_annee) }} €</strong></p>
 
 <h2>{% if expense_edit %}Modifier la charge{% else %}Ajouter une charge{% endif %}</h2>
-<form method="post" action="{% if expense_edit %}/appartement/charges/{{ expense_edit.id }}{% else %}/appartement/charges{% endif %}">
+<form method="post" action="{% if expense_edit %}/biens/{{ property_.id }}/charges/{{ expense_edit.id }}{% else %}/biens/{{ property_.id }}/charges{% endif %}">
     <label>Date <input type="date" name="date" value="{{ expense_edit.date if expense_edit else '' }}" required></label>
     <label>Montant TTC (€) <input type="number" step="0.01" name="montant_ttc" value="{{ expense_edit.montant_ttc if expense_edit else '' }}" required></label>
     <label>Fournisseur <input type="text" name="fournisseur" value="{{ expense_edit.fournisseur if expense_edit and expense_edit.fournisseur else '' }}"></label>
@@ -64,15 +60,15 @@
             <td>
                 {{ e.recurrence.value }}
                 {% if e.recurrence.value != 'aucune' %}
-                <form method="post" action="/appartement/charges/{{ e.id }}/generer" style="display:inline-flex; gap:0.25rem; align-items:center">
+                <form method="post" action="/biens/{{ property_.id }}/charges/{{ e.id }}/generer" style="display:inline-flex; gap:0.25rem; align-items:center">
                     <input type="date" name="jusqu_au" required>
                     <button type="submit" title="Générer les occurrences jusqu'à cette date">Générer</button>
                 </form>
                 {% endif %}
             </td>
             <td>
-                <a href="/appartement/charges/{{ e.id }}/modifier">Modifier</a>
-                <form method="post" action="/appartement/charges/{{ e.id }}/supprimer" style="display:inline">
+                <a href="/biens/{{ property_.id }}/charges/{{ e.id }}/modifier">Modifier</a>
+                <form method="post" action="/biens/{{ property_.id }}/charges/{{ e.id }}/supprimer" style="display:inline">
                     <button type="submit">Supprimer</button>
                 </form>
             </td>
@@ -99,5 +95,4 @@
         options: { responsive: true, maintainAspectRatio: false }
     });
 </script>
-{% endif %}
 {% endblock %}
