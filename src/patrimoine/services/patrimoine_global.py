@@ -40,7 +40,7 @@ def cash_disponible(session: Session, account: InvestmentAccount) -> float:
             solde += t.montant - t.frais
         elif t.type in (TypeTransaction.dividende, TypeTransaction.interet):
             solde += t.montant
-        elif t.type == TypeTransaction.frais:
+        elif t.type in (TypeTransaction.frais, TypeTransaction.retenue_source):
             solde -= t.montant
         # TypeTransaction.change : ignoré, voir docstring.
     return solde

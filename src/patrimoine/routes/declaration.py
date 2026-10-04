@@ -6,11 +6,11 @@ from sqlmodel import Session
 
 from ..db import get_session
 from ..deps import templates
-from ..fiscal.loader import load_fiscal_params
 from ..services.declaration import (
-    compute_recap_annee,
+    compute_recap_global,
     export_csv_charges_recettes,
     export_recap_csv,
+    export_recap_markdown,
 )
 
 router = APIRouter(prefix="/declaration")
@@ -23,12 +23,11 @@ def declaration(
     session: Session = Depends(get_session),
 ):
     annee = annee or date.today().year
-    lignes = compute_recap_annee(session, annee)
-    avertissements = load_fiscal_params(annee).unverified_warnings_declaration()
+    recap = compute_recap_global(session, annee)
     return templates.TemplateResponse(
         request,
         "declaration.html",
-        {"annee": annee, "lignes": lignes, "avertissements": avertissements},
+        {"annee": annee, "lignes": recap.lignes_biens, "recap": recap, "avertissements": recap.avertissements},
     )
 
 
@@ -51,4 +50,15 @@ def export_recap(annee: int | None = None, session: Session = Depends(get_sessio
         content=contenu,
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="recap-declaration-{annee}.csv"'},
+    )
+
+
+@router.get("/export-recap.md")
+def export_recap_md(annee: int | None = None, session: Session = Depends(get_session)):
+    annee = annee or date.today().year
+    contenu = export_recap_markdown(session, annee)
+    return Response(
+        content=contenu,
+        media_type="text/markdown",
+        headers={"Content-Disposition": f'attachment; filename="recap-complet-{annee}.md"'},
     )

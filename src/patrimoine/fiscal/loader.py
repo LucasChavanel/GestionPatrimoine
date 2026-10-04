@@ -110,6 +110,9 @@ class CasesDeclaration(BaseModel):
     foncier_reel_positif: str
     foncier_reel_deficit_imputable_revenu_global: str
     foncier_reel_deficit_report_fonciers: str
+    plus_value_mobiliere: str
+    dividendes_etrangers: str
+    credit_impot_etranger: str
     source: str
     verified: bool = False
 
