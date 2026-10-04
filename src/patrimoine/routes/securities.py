@@ -8,6 +8,7 @@ from ..db import get_session
 from ..deps import templates
 from ..models.enums import AllocationCategorie
 from ..models.security import Security
+from ..services.market_data import fetch_price
 
 router = APIRouter(prefix="/titres")
 
@@ -95,4 +96,18 @@ def supprimer(security_id: int, session: Session = Depends(get_session)):
     if security is not None:
         session.delete(security)
         session.commit()
+    return RedirectResponse(url="/titres", status_code=303)
+
+
+@router.post("/{security_id}/rafraichir-cours")
+def rafraichir_cours(security_id: int, session: Session = Depends(get_session)):
+    security = session.get(Security, security_id)
+    if security is not None and security.ticker_yahoo:
+        prix = fetch_price(security.ticker_yahoo)
+        if prix is not None:
+            security.dernier_cours = prix.prix
+            security.dernier_cours_devise = prix.devise
+            security.dernier_cours_date = date.today()
+            session.add(security)
+            session.commit()
     return RedirectResponse(url="/titres", status_code=303)

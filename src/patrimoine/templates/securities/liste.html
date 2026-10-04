@@ -35,6 +35,11 @@
             <td>{% if s.dernier_cours %}{{ s.dernier_cours }} {{ s.dernier_cours_devise or "" }} ({{ s.dernier_cours_date }}){% endif %}</td>
             <td>
                 <a href="/titres/{{ s.id }}/modifier">Modifier</a>
+                {% if s.ticker_yahoo %}
+                <form method="post" action="/titres/{{ s.id }}/rafraichir-cours" style="display:inline">
+                    <button type="submit">Rafraîchir le cours</button>
+                </form>
+                {% endif %}
                 <form method="post" action="/titres/{{ s.id }}/supprimer" style="display:inline">
                     <button type="submit">Supprimer</button>
                 </form>

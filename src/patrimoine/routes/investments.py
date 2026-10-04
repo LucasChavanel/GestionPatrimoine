@@ -6,10 +6,14 @@ from sqlmodel import Session, select
 
 from ..db import get_session
 from ..deps import templates
+from ..fiscal.loader import load_fiscal_params
 from ..models.enums import Courtier, EnvelopeType, TypeTransaction
 from ..models.investment_account import InvestmentAccount
 from ..models.investment_transaction import InvestmentTransaction
 from ..models.security import Security
+from ..services.allocation import compute_allocation
+from ..services.market_data import fetch_price
+from ..services.pea import compute_suivi_pea
 from ..services.positions import compute_positions
 
 router_liste = APIRouter(prefix="/investissements")
@@ -66,11 +70,35 @@ def fiche(
     account: InvestmentAccount = Depends(get_account_or_404),
 ):
     positions = compute_positions(session, account.id)
+    params = load_fiscal_params(date.today().year)
+    suivi_pea = compute_suivi_pea(session, account, params) if account.type == EnvelopeType.pea else None
+    allocation = compute_allocation(positions, params) if account.type == EnvelopeType.pea else None
     return templates.TemplateResponse(
         request,
         "investments/fiche.html",
-        {"account": account, "positions": positions},
+        {"account": account, "positions": positions, "suivi_pea": suivi_pea, "allocation": allocation},
     )
+
+
+@router_compte.post("/rafraichir-cours")
+def rafraichir_cours(
+    account_id: int,
+    session: Session = Depends(get_session),
+    account: InvestmentAccount = Depends(get_account_or_404),
+):
+    positions = compute_positions(session, account.id)
+    for position in positions:
+        security = position.security
+        if not security.ticker_yahoo:
+            continue
+        prix = fetch_price(security.ticker_yahoo)
+        if prix is not None:
+            security.dernier_cours = prix.prix
+            security.dernier_cours_devise = prix.devise
+            security.dernier_cours_date = date.today()
+            session.add(security)
+    session.commit()
+    return RedirectResponse(url=f"/investissements/{account_id}", status_code=303)
 
 
 @router_compte.post("")
