@@ -4,11 +4,7 @@
 {% include "property/_subnav.html" %}
 <h1>Réservations</h1>
 
-{% if not property_ %}
-<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
-{% else %}
-
-<form method="get" action="/appartement/reservations">
+<form method="get" action="/biens/{{ property_.id }}/reservations">
     <label>Année
         <select name="annee" onchange="this.form.submit()">
             {% for a in annees_disponibles %}
@@ -22,7 +18,7 @@
 <p class="disclaimer">Recettes encaissées par mois, basées sur la date de paiement (pas la date de séjour) — voir la colonne "Payé le" ci-dessous.</p>
 
 <h2>{% if booking_edit %}Modifier la réservation{% else %}Ajouter une réservation{% endif %}</h2>
-<form method="post" action="{% if booking_edit %}/appartement/reservations/{{ booking_edit.id }}{% else %}/appartement/reservations{% endif %}" id="form-reservation">
+<form method="post" action="{% if booking_edit %}/biens/{{ property_.id }}/reservations/{{ booking_edit.id }}{% else %}/biens/{{ property_.id }}/reservations{% endif %}" id="form-reservation">
     <label>Date d'arrivée <input type="date" name="date_arrivee" value="{{ booking_edit.date_arrivee if booking_edit else '' }}" required></label>
     <label>Date de départ <input type="date" name="date_depart" value="{{ booking_edit.date_depart if booking_edit else '' }}" required></label>
     <label>Plateforme
@@ -93,8 +89,8 @@
             <td>{% if b.date_paiement %}{{ b.date_paiement }}{% else %}<span class="warning">⏳ en attente</span>{% endif %}</td>
             <td>{{ b.statut.value }}</td>
             <td>
-                <a href="/appartement/reservations/{{ b.id }}/modifier">Modifier</a>
-                <form method="post" action="/appartement/reservations/{{ b.id }}/supprimer" style="display:inline">
+                <a href="/biens/{{ property_.id }}/reservations/{{ b.id }}/modifier">Modifier</a>
+                <form method="post" action="/biens/{{ property_.id }}/reservations/{{ b.id }}/supprimer" style="display:inline">
                     <button type="submit">Supprimer</button>
                 </form>
             </td>
@@ -175,5 +171,4 @@
         });
     })();
 </script>
-{% endif %}
 {% endblock %}

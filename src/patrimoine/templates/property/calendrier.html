@@ -4,14 +4,10 @@
 {% include "property/_subnav.html" %}
 <h1>Calendrier</h1>
 
-{% if not property_ %}
-<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
-{% else %}
-
 <div class="calendar-nav">
-    <a href="/appartement/calendrier?annee={{ annee_mois_precedent }}&mois={{ mois_precedent }}">&larr; précédent</a>
+    <a href="/biens/{{ property_.id }}/calendrier?annee={{ annee_mois_precedent }}&mois={{ mois_precedent }}">&larr; précédent</a>
     <strong>{{ nom_mois }} {{ annee }}</strong>
-    <a href="/appartement/calendrier?annee={{ annee_mois_suivant }}&mois={{ mois_suivant }}">suivant &rarr;</a>
+    <a href="/biens/{{ property_.id }}/calendrier?annee={{ annee_mois_suivant }}&mois={{ mois_suivant }}">suivant &rarr;</a>
 </div>
 
 <table class="calendar">
@@ -44,6 +40,4 @@
     <span class="calendar-legend calendar-booking-confirmee">confirmée</span>
     <span class="calendar-legend calendar-booking-annulee">annulée</span>
 </p>
-
-{% endif %}
 {% endblock %}

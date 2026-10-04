@@ -25,9 +25,8 @@ from .routes import (
 from .routes import (
     calendar as calendar_routes,
 )
-from .routes import (
-    property as property_routes,
-)
+from .routes.property import router_fiche as property_fiche_router
+from .routes.property import router_liste as property_liste_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 DEFAULT_PORT = 8451
@@ -37,7 +36,8 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Patrimoine")
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     app.include_router(dashboard.router)
-    app.include_router(property_routes.router)
+    app.include_router(property_liste_router)
+    app.include_router(property_fiche_router)
     app.include_router(bookings.router)
     app.include_router(expenses.router)
     app.include_router(works.router)

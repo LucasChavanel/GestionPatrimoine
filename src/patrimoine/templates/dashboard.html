@@ -11,29 +11,37 @@
     {% endfor %}
 </ul>
 {% endif %}
+{% if resumes_par_bien %}
+{% for r in resumes_par_bien %}
+<h2><a href="/biens/{{ r.property_.id }}">{{ r.property_.nom }}</a></h2>
 <section class="summary-cards">
     <div class="card">
         <h2>Recettes {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(recettes_annee) }} €</p>
+        <p class="amount">{{ "%.2f"|format(r.recettes_annee) }} €</p>
     </div>
     <div class="card">
         <h2>Charges {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(charges_annee) }} €</p>
+        <p class="amount">{{ "%.2f"|format(r.charges_annee) }} €</p>
     </div>
     <div class="card">
         <h2>Résultat {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(resultat_annee) }} €</p>
+        <p class="amount">{{ "%.2f"|format(r.resultat_annee) }} €</p>
     </div>
 </section>
+{% endfor %}
+{% else %}
+<p>Aucun bien renseigné pour l'instant. <a href="/biens">Créer un bien</a>.</p>
+{% endif %}
 
 <section>
-    <h2>Prochaines réservations</h2>
+    <h2>Prochaines réservations (tous biens)</h2>
     {% if prochaines_reservations %}
     <table>
-        <thead><tr><th>Arrivée</th><th>Départ</th><th>Plateforme</th><th>Net encaissé</th></tr></thead>
+        <thead><tr><th>Bien</th><th>Arrivée</th><th>Départ</th><th>Plateforme</th><th>Net encaissé</th></tr></thead>
         <tbody>
         {% for b in prochaines_reservations %}
             <tr>
+                <td>{{ b.property_.nom }}</td>
                 <td>{{ b.date_arrivee }}</td>
                 <td>{{ b.date_depart }}</td>
                 <td>{{ b.plateforme.value }}</td>

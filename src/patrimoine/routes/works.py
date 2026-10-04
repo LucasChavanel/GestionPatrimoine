@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import date
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -7,28 +5,25 @@ from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..deps import get_the_property, templates
+from ..deps import get_property_or_404, templates
 from ..fiscal.loader import load_fiscal_params
 from ..models.enums import EntityType, NatureWorks
 from ..models.furniture import Furniture
+from ..models.property import Property
 from ..models.works import Works
 from ..services.amortization import dotation_furniture, dotation_works, is_furniture_charge_directe
 from ..services.attachments import list_attachments
 
-router = APIRouter(prefix="/appartement/travaux")
+router = APIRouter(prefix="/biens/{property_id}/travaux")
 
 
-def _context(session: Session, annee: int):
-    property_ = get_the_property(session)
-    works_list: list[Works] = []
-    furniture_list: list[Furniture] = []
-    if property_ is not None:
-        works_list = session.exec(
-            select(Works).where(Works.property_id == property_.id).order_by(Works.date)
-        ).all()
-        furniture_list = session.exec(
-            select(Furniture).where(Furniture.property_id == property_.id).order_by(Furniture.date_achat)
-        ).all()
+def _context(session: Session, property_: Property, annee: int):
+    works_list = session.exec(
+        select(Works).where(Works.property_id == property_.id).order_by(Works.date)
+    ).all()
+    furniture_list = session.exec(
+        select(Furniture).where(Furniture.property_id == property_.id).order_by(Furniture.date_achat)
+    ).all()
 
     works_rows = [
         {
@@ -61,19 +56,27 @@ def _context(session: Session, annee: int):
         "natures_works": list(NatureWorks),
         "duree_suggeree_agencements": fiscal_params.meuble_tourisme.amortissement.durees_defaut.agencements,
         "duree_suggeree_mobilier": fiscal_params.meuble_tourisme.amortissement.durees_defaut.mobilier,
-        "redirect_to": f"/appartement/travaux?annee={annee}",
+        "redirect_to": f"/biens/{property_.id}/travaux?annee={annee}",
     }
 
 
 @router.get("")
-def liste(request: Request, annee: int | None = None, session: Session = Depends(get_session)):
+def liste(
+    property_id: int,
+    request: Request,
+    annee: int | None = None,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     annee = annee or date.today().year
-    return templates.TemplateResponse(request, "property/travaux.html", _context(session, annee))
+    return templates.TemplateResponse(request, "property/travaux.html", _context(session, property_, annee))
 
 
 @router.post("/works")
 def creer_works(
+    property_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     date_: str = Form(..., alias="date"),
     montant_ttc: float = Form(...),
     fournisseur: str | None = Form(None),
@@ -82,12 +85,8 @@ def creer_works(
     duree_amortissement: str | None = Form(None),
     avant_premiere_mise_en_location: str | None = Form(None),
 ):
-    property_ = get_the_property(session)
-    if property_ is None or property_.id is None:
-        return RedirectResponse(url="/appartement", status_code=303)
-
     works = Works(
-        property_id=property_.id,
+        property_id=property_id,
         date=date.fromisoformat(date_),
         montant_ttc=montant_ttc,
         fournisseur=fournisseur or None,
@@ -98,33 +97,36 @@ def creer_works(
     )
     session.add(works)
     session.commit()
-    return RedirectResponse(url=f"/appartement/travaux?annee={works.date.year}", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}/travaux?annee={works.date.year}", status_code=303)
 
 
 @router.post("/works/{works_id}/supprimer")
-def supprimer_works(works_id: int, session: Session = Depends(get_session)):
+def supprimer_works(
+    property_id: int,
+    works_id: int,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     works = session.get(Works, works_id)
     annee = works.date.year if works else date.today().year
     if works is not None:
         session.delete(works)
         session.commit()
-    return RedirectResponse(url=f"/appartement/travaux?annee={annee}", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}/travaux?annee={annee}", status_code=303)
 
 
 @router.post("/furniture")
 def creer_furniture(
+    property_id: int,
     session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
     date_achat: str = Form(...),
     montant_ttc: float = Form(...),
     description: str | None = Form(None),
     duree_amortissement: int = Form(...),
 ):
-    property_ = get_the_property(session)
-    if property_ is None or property_.id is None:
-        return RedirectResponse(url="/appartement", status_code=303)
-
     furniture = Furniture(
-        property_id=property_.id,
+        property_id=property_id,
         date_achat=date.fromisoformat(date_achat),
         montant_ttc=montant_ttc,
         description=description or None,
@@ -132,14 +134,21 @@ def creer_furniture(
     )
     session.add(furniture)
     session.commit()
-    return RedirectResponse(url=f"/appartement/travaux?annee={furniture.date_achat.year}", status_code=303)
+    return RedirectResponse(
+        url=f"/biens/{property_id}/travaux?annee={furniture.date_achat.year}", status_code=303
+    )
 
 
 @router.post("/furniture/{furniture_id}/supprimer")
-def supprimer_furniture(furniture_id: int, session: Session = Depends(get_session)):
+def supprimer_furniture(
+    property_id: int,
+    furniture_id: int,
+    session: Session = Depends(get_session),
+    property_: Property = Depends(get_property_or_404),
+):
     furniture = session.get(Furniture, furniture_id)
     annee = furniture.date_achat.year if furniture else date.today().year
     if furniture is not None:
         session.delete(furniture)
         session.commit()
-    return RedirectResponse(url=f"/appartement/travaux?annee={annee}", status_code=303)
+    return RedirectResponse(url=f"/biens/{property_id}/travaux?annee={annee}", status_code=303)

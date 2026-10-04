@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Biens — Patrimoine{% endblock %}
+{% block content %}
+<h1>Biens</h1>
+
+{% if properties %}
+<table>
+    <thead><tr><th>Nom</th><th>Adresse</th><th>Statut</th><th></th></tr></thead>
+    <tbody>
+    {% for p in properties %}
+        <tr>
+            <td>{{ p.nom }}</td>
+            <td>{{ p.adresse }}</td>
+            <td>{{ p.statut_classement.value }}</td>
+            <td><a href="/biens/{{ p.id }}">Ouvrir</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucun bien renseigné pour l'instant.</p>
+{% endif %}
+
+<h2>Ajouter un bien</h2>
+<form method="post" action="/biens">
+    <label>Nom <input type="text" name="nom" required></label>
+    <label>Adresse <input type="text" name="adresse" required></label>
+    <label>Surface (m²) <input type="number" step="0.01" name="surface" required></label>
+    <label>Date d'acquisition <input type="date" name="date_acquisition" required></label>
+    <label>Prix d'acquisition (€) <input type="number" step="0.01" name="prix_acquisition" required></label>
+    <label>Frais de notaire (€) <input type="number" step="0.01" name="frais_notaire" value="0"></label>
+    <label>Part du terrain (%, non amortissable) <input type="number" step="0.01" name="part_terrain_pct" value="0"></label>
+    <button type="submit">Créer le bien</button>
+</form>
+{% endblock %}
