@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import db
 from .routes import (
+    agencies,
     attachments,
     bookings,
     dashboard,
@@ -20,6 +21,9 @@ from .routes import (
     settings,
     simulator,
     works,
+)
+from .routes import (
+    calendar as calendar_routes,
 )
 from .routes import (
     property as property_routes,
@@ -41,6 +45,8 @@ def create_app() -> FastAPI:
     app.include_router(indivision.router)
     app.include_router(attachments.router)
     app.include_router(settings.router)
+    app.include_router(agencies.router)
+    app.include_router(calendar_routes.router)
     return app
 
 

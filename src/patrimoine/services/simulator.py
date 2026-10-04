@@ -85,11 +85,16 @@ class SimulationResult:
 
 
 def _recettes_annee(session: Session, property_id: int, annee: int) -> float:
+    """Comptabilité de caisse : une réservation compte dans les recettes de
+    l'année où elle est encaissée (date_paiement), pas l'année du séjour. Tant
+    que date_paiement n'est pas renseignée, ce n'est pas encore une recette."""
     bookings = session.exec(select(Booking).where(Booking.property_id == property_id)).all()
     return sum(
         b.montant_brut
         for b in bookings
-        if b.statut == StatutBooking.confirmee and b.date_arrivee.year == annee
+        if b.statut == StatutBooking.confirmee
+        and b.date_paiement is not None
+        and b.date_paiement.year == annee
     )
 
 
@@ -101,7 +106,9 @@ def _charges_deductibles_annee(session: Session, property_id: int, annee: int) -
     total += sum(
         b.commission_plateforme
         for b in bookings
-        if b.statut == StatutBooking.confirmee and b.date_arrivee.year == annee
+        if b.statut == StatutBooking.confirmee
+        and b.date_paiement is not None
+        and b.date_paiement.year == annee
     )
 
     works = session.exec(select(Works).where(Works.property_id == property_id)).all()

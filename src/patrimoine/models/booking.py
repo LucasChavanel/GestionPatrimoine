@@ -2,6 +2,7 @@ from datetime import date
 
 from sqlmodel import Field, Relationship, SQLModel
 
+from .agency import Agency
 from .enums import Plateforme, ReversementTaxeSejour, StatutBooking
 from .property import Property
 
@@ -11,6 +12,7 @@ class Booking(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     property_id: int = Field(foreign_key="property.id")
+    agency_id: int | None = Field(default=None, foreign_key="agency.id")
 
     date_arrivee: date
     date_depart: date
@@ -22,6 +24,11 @@ class Booking(SQLModel, table=True):
     montant_brut: float
     commission_plateforme: float = 0.0
 
+    # Date d'encaissement effectif (distincte du séjour). Détermine l'année/mois de
+    # reconnaissance de la recette en comptabilité de caisse (dashboard, simulateur) :
+    # tant qu'elle n'est pas renseignée, la réservation n'est pas encore une recette.
+    date_paiement: date | None = None
+
     # Champs informatifs uniquement — n'entrent dans aucun calcul de net encaissé
     # ni de recette fiscale, pour éviter un double comptage avec montant_brut.
     taxe_sejour_collectee: float = 0.0
@@ -32,6 +39,7 @@ class Booking(SQLModel, table=True):
     notes: str | None = None
 
     property_: Property = Relationship(back_populates="bookings")
+    agency: Agency | None = Relationship()
 
     @property
     def nuits(self) -> int:
@@ -40,3 +48,7 @@ class Booking(SQLModel, table=True):
     @property
     def net_encaisse(self) -> float:
         return self.montant_brut - self.commission_plateforme
+
+    @property
+    def est_encaisse(self) -> bool:
+        return self.date_paiement is not None

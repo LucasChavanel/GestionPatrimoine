@@ -128,3 +128,63 @@ th, td {
     padding: 0.5rem;
     border-bottom: 1px solid var(--color-border);
 }
+
+.calendar-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+table.calendar {
+    table-layout: fixed;
+    width: 100%;
+}
+
+table.calendar th {
+    text-align: center;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.calendar-cell {
+    vertical-align: top;
+    height: 5rem;
+    border: 1px solid var(--color-border);
+    padding: 0.25rem;
+}
+
+.calendar-cell.empty {
+    background: #fafafa;
+    border: none;
+}
+
+.calendar-day-num {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.calendar-booking {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    margin-top: 0.2rem;
+    color: white;
+}
+
+.calendar-booking-confirmee {
+    background: var(--color-accent);
+}
+
+.calendar-booking-annulee {
+    background: #999;
+    text-decoration: line-through;
+}
+
+.calendar-legend {
+    display: inline-block;
+    padding: 0.1rem 0.6rem;
+    border-radius: 3px;
+    color: white;
+    margin-right: 0.5rem;
+    font-size: 0.85rem;
+}

@@ -27,10 +27,14 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
 
     if property_ids:
         bookings = session.exec(select(Booking).where(Booking.property_id.in_(property_ids))).all()
+        # Comptabilité de caisse : recette reconnue à l'encaissement (date_paiement),
+        # pas à la date du séjour. Voir services/simulator.py pour la même logique.
         recettes_annee = sum(
             b.montant_brut
             for b in bookings
-            if b.statut == StatutBooking.confirmee and b.date_arrivee.year == annee
+            if b.statut == StatutBooking.confirmee
+            and b.date_paiement is not None
+            and b.date_paiement.year == annee
         )
         prochaines_reservations = sorted(
             (

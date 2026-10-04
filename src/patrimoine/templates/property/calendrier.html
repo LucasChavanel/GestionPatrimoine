@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Calendrier — Patrimoine{% endblock %}
+{% block content %}
+{% include "property/_subnav.html" %}
+<h1>Calendrier</h1>
+
+{% if not property_ %}
+<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
+{% else %}
+
+<div class="calendar-nav">
+    <a href="/appartement/calendrier?annee={{ annee_mois_precedent }}&mois={{ mois_precedent }}">&larr; précédent</a>
+    <strong>{{ nom_mois }} {{ annee }}</strong>
+    <a href="/appartement/calendrier?annee={{ annee_mois_suivant }}&mois={{ mois_suivant }}">suivant &rarr;</a>
+</div>
+
+<table class="calendar">
+    <thead>
+        <tr><th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th></tr>
+    </thead>
+    <tbody>
+    {% for semaine in grille %}
+        <tr>
+        {% for cellule in semaine %}
+            {% if cellule is none %}
+            <td class="calendar-cell empty"></td>
+            {% else %}
+            <td class="calendar-cell">
+                <div class="calendar-day-num">{{ cellule.jour }}</div>
+                {% for b in cellule.reservations %}
+                <div class="calendar-booking calendar-booking-{{ b.statut.value }}" title="{{ b.plateforme.value }} — {{ b.date_arrivee }} au {{ b.date_depart }} — {{ b.statut.value }}">
+                    {{ b.plateforme.value }}
+                </div>
+                {% endfor %}
+            </td>
+            {% endif %}
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<p>
+    <span class="calendar-legend calendar-booking-confirmee">confirmée</span>
+    <span class="calendar-legend calendar-booking-annulee">annulée</span>
+</p>
+
+{% endif %}
+{% endblock %}
