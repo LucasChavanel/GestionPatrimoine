@@ -17,10 +17,12 @@ from .routes import (
     dashboard,
     expenses,
     indivision,
-    property as property_routes,
     settings,
     simulator,
     works,
+)
+from .routes import (
+    property as property_routes,
 )
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"

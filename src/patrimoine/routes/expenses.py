@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -23,7 +22,7 @@ def _attachments_by_expense(session: Session, expenses: list[Expense]) -> dict[i
 
 
 @router.get("")
-def liste(request: Request, annee: Optional[int] = None, session: Session = Depends(get_session)):
+def liste(request: Request, annee: int | None = None, session: Session = Depends(get_session)):
     property_ = get_the_property(session)
     annee = annee or date.today().year
 
@@ -101,8 +100,8 @@ def _form_to_expense(
     expense: Expense,
     date_: str,
     montant_ttc: float,
-    fournisseur: Optional[str],
-    description: Optional[str],
+    fournisseur: str | None,
+    description: str | None,
     categorie: CategorieCharge,
     recurrence: Recurrence,
 ) -> None:
@@ -119,8 +118,8 @@ def creer(
     session: Session = Depends(get_session),
     date_: str = Form(..., alias="date"),
     montant_ttc: float = Form(...),
-    fournisseur: Optional[str] = Form(None),
-    description: Optional[str] = Form(None),
+    fournisseur: str | None = Form(None),
+    description: str | None = Form(None),
     categorie: CategorieCharge = Form(...),
     recurrence: Recurrence = Form(Recurrence.aucune),
 ):
@@ -141,8 +140,8 @@ def modifier(
     session: Session = Depends(get_session),
     date_: str = Form(..., alias="date"),
     montant_ttc: float = Form(...),
-    fournisseur: Optional[str] = Form(None),
-    description: Optional[str] = Form(None),
+    fournisseur: str | None = Form(None),
+    description: str | None = Form(None),
     categorie: CategorieCharge = Form(...),
     recurrence: Recurrence = Form(Recurrence.aucune),
 ):

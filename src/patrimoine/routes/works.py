@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -67,7 +66,7 @@ def _context(session: Session, annee: int):
 
 
 @router.get("")
-def liste(request: Request, annee: Optional[int] = None, session: Session = Depends(get_session)):
+def liste(request: Request, annee: int | None = None, session: Session = Depends(get_session)):
     annee = annee or date.today().year
     return templates.TemplateResponse(request, "property/travaux.html", _context(session, annee))
 
@@ -77,11 +76,11 @@ def creer_works(
     session: Session = Depends(get_session),
     date_: str = Form(..., alias="date"),
     montant_ttc: float = Form(...),
-    fournisseur: Optional[str] = Form(None),
-    description: Optional[str] = Form(None),
+    fournisseur: str | None = Form(None),
+    description: str | None = Form(None),
     nature: NatureWorks = Form(...),
-    duree_amortissement: Optional[str] = Form(None),
-    avant_premiere_mise_en_location: Optional[str] = Form(None),
+    duree_amortissement: str | None = Form(None),
+    avant_premiere_mise_en_location: str | None = Form(None),
 ):
     property_ = get_the_property(session)
     if property_ is None or property_.id is None:
@@ -117,7 +116,7 @@ def creer_furniture(
     session: Session = Depends(get_session),
     date_achat: str = Form(...),
     montant_ttc: float = Form(...),
-    description: Optional[str] = Form(None),
+    description: str | None = Form(None),
     duree_amortissement: int = Form(...),
 ):
     property_ = get_the_property(session)

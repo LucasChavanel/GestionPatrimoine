@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
@@ -12,7 +11,7 @@ class FiscalYearCarryforward(SQLModel, table=True):
 
     __tablename__ = "fiscal_year_carryforward"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     property_id: int = Field(foreign_key="property.id")
 
     annee_origine: int

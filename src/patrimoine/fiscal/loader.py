@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List
 
 import yaml
 from pydantic import BaseModel
@@ -59,10 +58,10 @@ class FiscalParams(BaseModel):
     year: int
     meuble_tourisme: MeubleTourisme
     prelevements_sociaux: PrelevementsSociaux
-    cases_declaration: Dict = {}
+    cases_declaration: dict = {}
 
-    def unverified_warnings(self) -> List[str]:
-        warnings: List[str] = []
+    def unverified_warnings(self) -> list[str]:
+        warnings: list[str] = []
         mb = self.meuble_tourisme.micro_bic
         if not mb.non_classe.verified:
             warnings.append(

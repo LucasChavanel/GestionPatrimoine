@@ -48,9 +48,28 @@ La date de la dernière sauvegarde est affichée sur le dashboard.
 ## Développement
 
 ```bash
-uv run pytest        # tests unitaires (calculs : nuits, net encaissé, amortissements, simulateur, plafonds)
+uv run pytest             # tests unitaires (calculs : nuits, net encaissé, amortissements, simulateur, plafonds)
+uv run ruff check .       # lint
 uv run alembic revision --autogenerate -m "message"   # nouvelle migration après modification des modèles
 ```
+
+## Workflow de contribution
+
+- `main` est toujours stable : c'est la version que vous lancez réellement avec vos données.
+- Toute nouvelle fonctionnalité ou correction se fait sur une branche dédiée, créée depuis `main` :
+  ```bash
+  git checkout -b feature/nom-court-descriptif
+  ```
+- Une fois le travail prêt, ouvrir une **Pull Request** vers `main`. La CI (`.github/workflows/ci.yml`) lance automatiquement `ruff check` et `pytest` sur chaque push et chaque PR.
+- La PR ne doit être fusionnée que lorsque la CI est verte.
+- Pas de push direct sur `main` une fois la protection de branche activée (voir ci-dessous) — toujours passer par une PR, même seul.
+
+### Activer la protection de la branche `main` (à faire une fois, sur GitHub)
+
+Settings → Branches → Add branch protection rule → `main` :
+- ☑ Require a pull request before merging
+- ☑ Require status checks to pass before merging → sélectionner le job `test` (CI)
+- ☑ Do not allow bypassing the above settings (optionnel, mais cohérent avec « pas de push direct »)
 
 ## Périmètre de cette phase
 

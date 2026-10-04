@@ -1,5 +1,4 @@
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlmodel import Field, SQLModel
 
@@ -13,13 +12,13 @@ class Attachment(SQLModel, table=True):
 
     __tablename__ = "attachment"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     sha256_hash: str = Field(index=True)
     stored_filename: str
     original_filename: str
-    content_type: Optional[str] = None
-    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    content_type: str | None = None
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     entity_type: EntityType = Field(index=True)
     entity_id: int = Field(index=True)

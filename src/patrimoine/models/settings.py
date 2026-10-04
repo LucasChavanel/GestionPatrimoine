@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
@@ -9,5 +8,5 @@ class AppSettings(SQLModel, table=True):
 
     __tablename__ = "app_settings"
 
-    id: Optional[int] = Field(default=1, primary_key=True)
-    last_backup_at: Optional[datetime] = None
+    id: int | None = Field(default=1, primary_key=True)
+    last_backup_at: datetime | None = None

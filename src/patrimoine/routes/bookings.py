@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import calendar
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -17,7 +16,7 @@ router = APIRouter(prefix="/appartement/reservations")
 
 
 @router.get("")
-def liste(request: Request, annee: Optional[int] = None, session: Session = Depends(get_session)):
+def liste(request: Request, annee: int | None = None, session: Session = Depends(get_session)):
     property_ = get_the_property(session)
     annee = annee or date.today().year
 
@@ -103,10 +102,10 @@ def _form_to_booking(
     montant_brut: float,
     commission_plateforme: float,
     taxe_sejour_collectee: float,
-    taxe_sejour_reversee_par: Optional[str],
+    taxe_sejour_reversee_par: str | None,
     frais_menage_factures: float,
     statut: StatutBooking,
-    notes: Optional[str],
+    notes: str | None,
 ) -> None:
     booking.date_arrivee = date.fromisoformat(date_arrivee)
     booking.date_depart = date.fromisoformat(date_depart)
@@ -131,10 +130,10 @@ def creer(
     montant_brut: float = Form(...),
     commission_plateforme: float = Form(0.0),
     taxe_sejour_collectee: float = Form(0.0),
-    taxe_sejour_reversee_par: Optional[str] = Form(None),
+    taxe_sejour_reversee_par: str | None = Form(None),
     frais_menage_factures: float = Form(0.0),
     statut: StatutBooking = Form(StatutBooking.confirmee),
-    notes: Optional[str] = Form(None),
+    notes: str | None = Form(None),
 ):
     property_ = get_the_property(session)
     if property_ is None or property_.id is None:
@@ -169,10 +168,10 @@ def modifier(
     montant_brut: float = Form(...),
     commission_plateforme: float = Form(0.0),
     taxe_sejour_collectee: float = Form(0.0),
-    taxe_sejour_reversee_par: Optional[str] = Form(None),
+    taxe_sejour_reversee_par: str | None = Form(None),
     frais_menage_factures: float = Form(0.0),
     statut: StatutBooking = Form(StatutBooking.confirmee),
-    notes: Optional[str] = Form(None),
+    notes: str | None = Form(None),
 ):
     booking = session.get(Booking, booking_id)
     if booking is None:

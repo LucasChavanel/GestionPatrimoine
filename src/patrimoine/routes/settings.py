@@ -10,7 +10,12 @@ from .. import db
 from ..db import get_session
 from ..deps import templates
 from ..models.settings import AppSettings
-from ..services.backup import RestoreError, build_encrypted_archive, mark_backup_done, restore_encrypted_archive
+from ..services.backup import (
+    RestoreError,
+    build_encrypted_archive,
+    mark_backup_done,
+    restore_encrypted_archive,
+)
 
 router = APIRouter(prefix="/parametres")
 
