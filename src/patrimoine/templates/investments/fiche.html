@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ account.nom }} — Patrimoine{% endblock %}
+{% block content %}
+{% include "investments/_subnav.html" %}
+<h1>Fiche compte</h1>
+
+<section>
+    <h2>Informations générales</h2>
+    <form method="post" action="/investissements/{{ account.id }}">
+        <label>Nom <input type="text" name="nom" value="{{ account.nom }}" required></label>
+        <label>Type
+            <select name="type_enveloppe">
+                {% for t in ["pea", "cto", "autre"] %}
+                <option value="{{ t }}" {% if account.type.value == t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Courtier
+            <select name="courtier">
+                {% for c in ["trade_republic", "ibkr", "autre"] %}
+                <option value="{{ c }}" {% if account.courtier.value == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Devise de base <input type="text" name="devise_base" value="{{ account.devise_base }}"></label>
+        <label>Date d'ouverture <input type="date" name="date_ouverture" value="{{ account.date_ouverture if account.date_ouverture else '' }}"></label>
+        <button type="submit">Enregistrer</button>
+    </form>
+</section>
+
+<section>
+    <h2>Positions</h2>
+    {% if positions %}
+    <table>
+        <thead><tr><th>Titre</th><th>ISIN</th><th>Quantité détenue</th><th>PRMP</th><th>Montant investi</th><th>Dernier cours</th></tr></thead>
+        <tbody>
+        {% for p in positions %}
+            <tr>
+                <td>{{ p.security.nom }}</td>
+                <td>{{ p.security.isin }}</td>
+                <td>{{ p.quantite_detenue }}</td>
+                <td>{{ "%.4f"|format(p.prmp) }} {{ account.devise_base }}</td>
+                <td>{{ "%.2f"|format(p.montant_investi) }} {{ account.devise_base }}</td>
+                <td>{% if p.security.dernier_cours %}{{ p.security.dernier_cours }} {{ p.security.dernier_cours_devise or "" }} ({{ p.security.dernier_cours_date }}){% else %}—{% endif %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Aucune position détenue sur ce compte.</p>
+    {% endif %}
+</section>
+{% endblock %}

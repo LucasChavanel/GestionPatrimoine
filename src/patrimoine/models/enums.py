@@ -77,3 +77,31 @@ class EntityType(str, Enum):
     expense = "expense"
     immobilisation = "immobilisation"
     coownership_year = "coownership_year"
+
+
+class EnvelopeType(str, Enum):
+    pea = "pea"
+    cto = "cto"
+    autre = "autre"
+
+
+class Courtier(str, Enum):
+    trade_republic = "trade_republic"
+    ibkr = "ibkr"
+    autre = "autre"
+
+
+class TypeTransaction(str, Enum):
+    achat = "achat"
+    vente = "vente"
+    dividende = "dividende"
+    depot = "depot"
+    retrait = "retrait"
+    frais = "frais"
+    change = "change"
+
+
+class AllocationCategorie(str, Enum):
+    world = "world"
+    europe = "europe"
+    autre = "autre"
