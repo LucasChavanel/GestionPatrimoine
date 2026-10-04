@@ -25,3 +25,6 @@ class InvestmentTransaction(SQLModel, table=True):
     frais: float = 0.0
     montant: float  # montant total de l'opération, hors frais
     description: str | None = None
+    # Clé de dédoublonnage pour les imports automatisés (ex. "ibkr-{transactionID}",
+    # "ibkr-position-{conid}") — None pour toute saisie manuelle (Trade Republic).
+    external_id: str | None = Field(default=None, index=True)
