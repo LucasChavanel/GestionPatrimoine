@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Patrimoine{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/pico.min.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
     <script src="/static/js/htmx.min.js" defer></script>
 </head>
 <body>
     <nav class="main-nav">
-        <a href="/">Dashboard</a>
-        <a href="/biens">Biens</a>
-        <a href="/indivision">Indivision</a>
-        <a href="/investissements">Investissements</a>
-        <a href="/liquidites">Liquidités</a>
-        <a href="/declaration">Déclaration</a>
-        <a href="/parametres">Paramètres</a>
+        <a href="/"><span class="icon" style="--icon-src:url('/static/icons/dashboard.svg')"></span>Dashboard</a>
+        <a href="/biens"><span class="icon" style="--icon-src:url('/static/icons/biens.svg')"></span>Biens</a>
+        <a href="/indivision"><span class="icon" style="--icon-src:url('/static/icons/indivision.svg')"></span>Indivision</a>
+        <a href="/investissements"><span class="icon" style="--icon-src:url('/static/icons/investissements.svg')"></span>Investissements</a>
+        <a href="/liquidites"><span class="icon" style="--icon-src:url('/static/icons/liquidites.svg')"></span>Liquidités</a>
+        <a href="/declaration"><span class="icon" style="--icon-src:url('/static/icons/declaration.svg')"></span>Déclaration</a>
+        <a href="/parametres"><span class="icon" style="--icon-src:url('/static/icons/parametres.svg')"></span>Paramètres</a>
     </nav>
     <main>
         {% block content %}{% endblock %}

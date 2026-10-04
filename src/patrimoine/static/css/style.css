@@ -27,6 +27,30 @@ body {
     color: white;
     text-decoration: none;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Icônes SVG vendorisées (Tabler Icons, MIT), posées via
+   <span class="icon" style="--icon-src:url(...)">. Un masque CSS avec
+   background-color: currentColor permet à l'icône de suivre la couleur du
+   texte environnant (ce que ferait stroke="currentColor" dans le SVG si on
+   l'affichait en inline, mais pas via une image externe). */
+.icon {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.2em;
+    background-color: currentColor;
+    mask-image: var(--icon-src);
+    -webkit-mask-image: var(--icon-src);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
 }
 
 main {
