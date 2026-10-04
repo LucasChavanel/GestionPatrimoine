@@ -66,16 +66,14 @@ class Recurrence(str, Enum):
     annuelle = "annuelle"
 
 
-class NatureWorks(str, Enum):
-    entretien_reparation = "entretien_reparation"
-    amelioration = "amelioration"
-    construction_agrandissement = "construction_agrandissement"
+class NatureImmobilisation(str, Enum):
+    travaux = "travaux"
+    mobilier = "mobilier"
 
 
 class EntityType(str, Enum):
     property = "property"
     booking = "booking"
     expense = "expense"
-    works = "works"
-    furniture = "furniture"
+    immobilisation = "immobilisation"
     coownership_year = "coownership_year"

@@ -7,7 +7,8 @@ Décisions prises avec l'utilisateur (voir conversation / plan) :
   location s'intègrent à la base amortissable du bâti (répartis sur les
   BuildingComponent), plutôt que d'être amortis séparément.
 - Le mobilier sous le seuil (fichier fiscal de l'année d'achat) est une charge
-  directe, pas un amortissement.
+  directe, pas un amortissement — voir routes/expenses.py pour la décision
+  prise à la saisie (Immobilisation créée ou non).
 """
 
 from __future__ import annotations
@@ -15,10 +16,9 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from ..fiscal.loader import FiscalParams
-from ..models.enums import NatureWorks
-from ..models.furniture import Furniture
+from ..models.enums import NatureImmobilisation
+from ..models.immobilisation import Immobilisation
 from ..models.property import BuildingComponent, Property
-from ..models.works import Works
 
 JOURS_PAR_AN = 365
 
@@ -55,14 +55,13 @@ def dotation_annuelle(base: float, duree_ans: int, date_debut: date, annee: int)
     return taux_journalier * nb_jours
 
 
-def extra_base_travaux_avant_activite(works_list: list[Works]) -> float:
-    """Montant des travaux d'amélioration/construction réalisés avant la première
-    mise en location, à ajouter à la base amortissable du bâti."""
+def extra_base_travaux_avant_activite(immobilisations: list[Immobilisation]) -> float:
+    """Montant des travaux réalisés avant la première mise en location, à ajouter
+    à la base amortissable du bâti plutôt qu'amortis séparément."""
     return sum(
-        w.montant_ttc
-        for w in works_list
-        if w.avant_premiere_mise_en_location
-        and w.nature in (NatureWorks.amelioration, NatureWorks.construction_agrandissement)
+        i.montant
+        for i in immobilisations
+        if i.avant_premiere_mise_en_location and i.type == NatureImmobilisation.travaux
     )
 
 
@@ -76,22 +75,16 @@ def dotation_building_component(
     )
 
 
-def dotation_works(works: Works, annee: int) -> float:
-    """0 si entretien/réparation (charge directe, gérée dans le simulateur) ou si
-    avant première mise en location (intégré à la base du bâti, voir ci-dessus)."""
-    if works.avant_premiere_mise_en_location or not works.est_amortissable:
-        return 0.0
-    if not works.duree_amortissement:
-        return 0.0
-    return dotation_annuelle(works.montant_ttc, works.duree_amortissement, works.date, annee)
-
-
-def is_furniture_charge_directe(furniture: Furniture, fiscal_params: FiscalParams) -> bool:
+def montant_depasse_seuil_mobilier(montant_ttc: float, fiscal_params: FiscalParams) -> bool:
     """Seuil évalué avec le fichier fiscal de l'année d'achat (pas l'année courante)."""
-    return furniture.montant_ttc < fiscal_params.meuble_tourisme.amortissement.seuil_charge_directe_mobilier
+    return montant_ttc >= fiscal_params.meuble_tourisme.amortissement.seuil_charge_directe_mobilier
 
 
-def dotation_furniture(furniture: Furniture, annee: int, fiscal_params_achat: FiscalParams) -> float:
-    if is_furniture_charge_directe(furniture, fiscal_params_achat):
+def dotation_immobilisation(immobilisation: Immobilisation, annee: int) -> float:
+    """0 pour les travaux intégrés à la base du bâti (avant première mise en
+    location) — gérés via extra_base_travaux_avant_activite/dotation_building_component."""
+    if immobilisation.avant_premiere_mise_en_location and immobilisation.type == NatureImmobilisation.travaux:
         return 0.0
-    return dotation_annuelle(furniture.montant_ttc, furniture.duree_amortissement, furniture.date_achat, annee)
+    return dotation_annuelle(
+        immobilisation.montant, immobilisation.duree_ans, immobilisation.date_mise_en_service, annee
+    )
