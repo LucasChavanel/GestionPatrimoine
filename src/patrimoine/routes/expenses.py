@@ -7,9 +7,12 @@ from sqlmodel import Session, select
 
 from ..db import get_session
 from ..deps import get_property_or_404, templates
-from ..models.enums import CategorieCharge, EntityType, Recurrence
+from ..fiscal.loader import load_fiscal_params
+from ..models.enums import CategorieCharge, EntityType, NatureImmobilisation, Recurrence
 from ..models.expense import Expense
+from ..models.immobilisation import Immobilisation
 from ..models.property import Property
+from ..services.amortization import montant_depasse_seuil_mobilier
 from ..services.attachments import list_attachments
 from ..services.recurrence import generate_occurrences
 
@@ -104,6 +107,40 @@ def _form_to_expense(
     expense.recurrence = recurrence
 
 
+def _proposer_immobilisation(session: Session, property_id: int, expense: Expense) -> Immobilisation | None:
+    """Une charge travaux_amelioration crée toujours une proposition d'Immobilisation ;
+    une charge mobilier seulement si son montant atteint le seuil (sinon elle reste
+    une simple charge déductible). Voir fiscal/params/*.yaml (categories_charges)."""
+    if expense.categorie == CategorieCharge.travaux_amelioration:
+        type_immo = NatureImmobilisation.travaux
+    elif expense.categorie == CategorieCharge.mobilier:
+        fiscal_params = load_fiscal_params(expense.date_paiement.year)
+        if not montant_depasse_seuil_mobilier(expense.montant_ttc, fiscal_params):
+            return None
+        type_immo = NatureImmobilisation.mobilier
+    else:
+        return None
+
+    fiscal_params = load_fiscal_params(expense.date_paiement.year)
+    durees = fiscal_params.meuble_tourisme.amortissement.durees_defaut
+    duree_defaut = durees.agencements if type_immo == NatureImmobilisation.travaux else durees.mobilier
+
+    immo = Immobilisation(
+        property_id=property_id,
+        type=type_immo,
+        date_mise_en_service=expense.date_paiement,
+        montant=expense.montant_ttc,
+        duree_ans=duree_defaut,
+        description=expense.description,
+        fournisseur=expense.fournisseur,
+        source_expense_id=expense.id,
+    )
+    session.add(immo)
+    session.commit()
+    session.refresh(immo)
+    return immo
+
+
 @router.post("")
 def creer(
     property_id: int,
@@ -138,6 +175,13 @@ def creer(
     )
     session.add(expense)
     session.commit()
+    session.refresh(expense)
+
+    immo = _proposer_immobilisation(session, property_id, expense)
+    if immo is not None:
+        return RedirectResponse(
+            url=f"/biens/{property_id}/travaux/{immo.id}/modifier", status_code=303
+        )
     return RedirectResponse(
         url=f"/biens/{property_id}/charges?annee={expense.date_paiement.year}", status_code=303
     )

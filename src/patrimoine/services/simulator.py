@@ -18,17 +18,14 @@ from sqlmodel import Session, select
 
 from ..fiscal.loader import FiscalParams, MicroBicBareme, load_fiscal_params
 from ..models.booking import Booking
-from ..models.enums import NatureWorks, StatutBooking
+from ..models.enums import StatutBooking
 from ..models.expense import Expense
-from ..models.furniture import Furniture
+from ..models.immobilisation import Immobilisation
 from ..models.property import BuildingComponent, Property
-from ..models.works import Works
 from .amortization import (
     dotation_building_component,
-    dotation_furniture,
-    dotation_works,
+    dotation_immobilisation,
     extra_base_travaux_avant_activite,
-    is_furniture_charge_directe,
 )
 
 DUREE_REPORT_DEFICIT_ANS = 10
@@ -132,22 +129,6 @@ def _charges_deductibles_annee(session: Session, property_: Property, annee: int
         and b.date_paiement.year == annee
     )
 
-    works = session.exec(select(Works).where(Works.property_id == property_.id)).all()
-    total += sum(
-        w.montant_ttc
-        for w in works
-        if w.nature == NatureWorks.entretien_reparation
-        and not w.avant_premiere_mise_en_location
-        and w.date.year == annee
-    )
-
-    furniture = session.exec(select(Furniture).where(Furniture.property_id == property_.id)).all()
-    for f in furniture:
-        if f.date_achat.year == annee:
-            params_achat = load_fiscal_params(f.date_achat.year)
-            if is_furniture_charge_directe(f, params_achat):
-                total += f.montant_ttc
-
     return total * property_.quote_part
 
 
@@ -170,19 +151,16 @@ def _avertissements_charges_a_qualifier(session: Session, property_: Property, a
 
 
 def _amortissements_theoriques_annee(session: Session, property_: Property, annee: int) -> float:
-    works = session.exec(select(Works).where(Works.property_id == property_.id)).all()
-    extra_base = extra_base_travaux_avant_activite(works)
+    immobilisations = session.exec(
+        select(Immobilisation).where(Immobilisation.property_id == property_.id)
+    ).all()
+    extra_base = extra_base_travaux_avant_activite(immobilisations)
 
     components = session.exec(
         select(BuildingComponent).where(BuildingComponent.property_id == property_.id)
     ).all()
     total = sum(dotation_building_component(c, property_, extra_base, annee) for c in components)
-    total += sum(dotation_works(w, annee) for w in works)
-
-    furniture = session.exec(select(Furniture).where(Furniture.property_id == property_.id)).all()
-    for f in furniture:
-        params_achat = load_fiscal_params(f.date_achat.year)
-        total += dotation_furniture(f, annee, params_achat)
+    total += sum(dotation_immobilisation(i, annee) for i in immobilisations)
 
     return total * property_.quote_part
 

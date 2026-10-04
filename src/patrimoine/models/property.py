@@ -8,8 +8,7 @@ from .enums import NatureComposant, StatutClassement, TypeLocation
 if TYPE_CHECKING:
     from .booking import Booking
     from .expense import Expense
-    from .furniture import Furniture
-    from .works import Works
+    from .immobilisation import Immobilisation
 
 
 class Property(SQLModel, table=True):
@@ -42,8 +41,7 @@ class Property(SQLModel, table=True):
     building_components: list["BuildingComponent"] = Relationship(back_populates="property_")
     bookings: list["Booking"] = Relationship(back_populates="property_")
     expenses: list["Expense"] = Relationship(back_populates="property_")
-    works: list["Works"] = Relationship(back_populates="property_")
-    furniture: list["Furniture"] = Relationship(back_populates="property_")
+    immobilisations: list["Immobilisation"] = Relationship(back_populates="property_")
 
     @property
     def base_amortissable(self) -> float:

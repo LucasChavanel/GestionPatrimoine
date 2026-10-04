@@ -17,10 +17,10 @@ from .routes import (
     bookings,
     dashboard,
     expenses,
+    immobilisations,
     indivision,
     settings,
     simulator,
-    works,
 )
 from .routes import (
     calendar as calendar_routes,
@@ -40,7 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(property_fiche_router)
     app.include_router(bookings.router)
     app.include_router(expenses.router)
-    app.include_router(works.router)
+    app.include_router(immobilisations.router)
     app.include_router(simulator.router)
     app.include_router(indivision.router)
     app.include_router(attachments.router)

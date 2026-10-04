@@ -199,9 +199,9 @@ def test_quote_part_reduit_la_base_proportionnellement(session):
     assert result_moitie.recettes == 5_000.0
 
 
-def test_reel_works_avant_mise_en_location_integre_a_la_base(session):
-    from patrimoine.models.enums import NatureWorks
-    from patrimoine.models.works import Works
+def test_reel_travaux_avant_mise_en_location_integre_a_la_base(session):
+    from patrimoine.models.enums import NatureImmobilisation
+    from patrimoine.models.immobilisation import Immobilisation
 
     p = _make_property(session, date_premiere_mise_en_location=date(2020, 9, 1))
     session.add(
@@ -211,11 +211,12 @@ def test_reel_works_avant_mise_en_location_integre_a_la_base(session):
         )
     )
     session.add(
-        Works(
+        Immobilisation(
             property_id=p.id,
-            date=date(2020, 3, 1),
-            montant_ttc=50_000,
-            nature=NatureWorks.amelioration,
+            type=NatureImmobilisation.travaux,
+            date_mise_en_service=date(2020, 3, 1),
+            montant=50_000,
+            duree_ans=10,
             avant_premiere_mise_en_location=True,
         )
     )
@@ -225,3 +226,60 @@ def test_reel_works_avant_mise_en_location_integre_a_la_base(session):
     result = simulate_year(session, p, 2021, tmi=0.30)
     # Base attendue : (100000 batiment + 50000 travaux avant activite) / 10 ans = 15000/an.
     assert result.reel.amortissements_theoriques == pytest.approx(15_000.0, rel=1e-3)
+
+
+def test_travaux_amelioration_expense_exclue_des_charges_deductibles(session):
+    # Une charge categorie=travaux_amelioration est capitalisee (via une Immobilisation
+    # cree a part), pas deduite directement — sinon double comptage.
+    p = _make_property(session)
+    session.add(_booking(p.id, 10_000, 2026))
+    session.add(
+        Expense(
+            property_id=p.id,
+            date_paiement=date(2026, 3, 1),
+            montant_ttc=5_000,
+            categorie="travaux_amelioration",
+        )
+    )
+    session.commit()
+
+    result = simulate_year(session, p, 2026, tmi=0.30)
+    assert result.reel.charges_deductibles == 0.0
+
+
+def test_mobilier_sous_seuil_deductible_comme_charge(session):
+    p = _make_property(session)
+    session.add(_booking(p.id, 10_000, 2026))
+    session.add(
+        Expense(
+            property_id=p.id, date_paiement=date(2026, 3, 1), montant_ttc=200, categorie="mobilier"
+        )
+    )
+    session.commit()
+
+    result = simulate_year(session, p, 2026, tmi=0.30)
+    assert result.reel.charges_deductibles == 200.0
+
+
+def test_reel_immobilisation_amortie_separement(session):
+    """Un travaux amortissable PAS avant mise en location s'amortit sur sa propre
+    duree, independamment de la base du bati."""
+    from patrimoine.models.enums import NatureImmobilisation
+    from patrimoine.models.immobilisation import Immobilisation
+
+    p = _make_property(session)
+    session.add(
+        Immobilisation(
+            property_id=p.id,
+            type=NatureImmobilisation.mobilier,
+            date_mise_en_service=date(2020, 1, 1),
+            montant=7_000,
+            duree_ans=7,
+            avant_premiere_mise_en_location=False,
+        )
+    )
+    session.add(_booking(p.id, 50_000, 2021))
+    session.commit()
+
+    result = simulate_year(session, p, 2021, tmi=0.30)
+    assert result.reel.amortissements_theoriques == pytest.approx(1_000.0, rel=1e-3)
