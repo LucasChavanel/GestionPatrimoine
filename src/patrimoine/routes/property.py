@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 from ..db import get_session
 from ..deps import get_property_or_404, templates
 from ..fiscal.loader import load_fiscal_params
-from ..models.enums import NatureComposant, StatutClassement
+from ..models.enums import NatureComposant, StatutClassement, TypeLocation
 from ..models.property import BuildingComponent, Property
 
 router_liste = APIRouter(prefix="/biens")
@@ -29,7 +29,9 @@ def _parse_optional_int(value: str | None) -> int | None:
 @router_liste.get("")
 def liste(request: Request, session: Session = Depends(get_session)):
     properties = session.exec(select(Property).order_by(Property.nom)).all()
-    return templates.TemplateResponse(request, "property/liste.html", {"properties": properties})
+    return templates.TemplateResponse(
+        request, "property/liste.html", {"properties": properties, "types_location": list(TypeLocation)}
+    )
 
 
 @router_liste.post("")
@@ -42,6 +44,8 @@ def creer(
     prix_acquisition: float = Form(...),
     frais_notaire: float = Form(0.0),
     part_terrain_pct: float = Form(0.0),
+    type_location: TypeLocation = Form(TypeLocation.meuble_tourisme_non_classe),
+    quote_part: float = Form(1.0),
 ):
     property_ = Property(
         nom=nom,
@@ -51,6 +55,8 @@ def creer(
         prix_acquisition=prix_acquisition,
         frais_notaire=frais_notaire,
         part_terrain_pct=part_terrain_pct,
+        type_location=type_location,
+        quote_part=quote_part,
     )
     session.add(property_)
     session.commit()
@@ -70,6 +76,7 @@ def fiche(
         {
             "property_": property_,
             "natures_composant": list(NatureComposant),
+            "types_location": list(TypeLocation),
             "durees_defaut": fiscal_params.meuble_tourisme.amortissement.durees_defaut,
         },
     )
@@ -87,6 +94,8 @@ def enregistrer(
     prix_acquisition: float = Form(...),
     frais_notaire: float = Form(0.0),
     part_terrain_pct: float = Form(0.0),
+    type_location: TypeLocation = Form(TypeLocation.meuble_tourisme_non_classe),
+    quote_part: float = Form(1.0),
     statut_classement: StatutClassement = Form(StatutClassement.non_classe),
     nb_etoiles: str | None = Form(None),
     date_classement: str | None = Form(None),
@@ -100,6 +109,8 @@ def enregistrer(
     property_.prix_acquisition = prix_acquisition
     property_.frais_notaire = frais_notaire
     property_.part_terrain_pct = part_terrain_pct
+    property_.type_location = type_location
+    property_.quote_part = quote_part
     property_.statut_classement = statut_classement
     property_.nb_etoiles = _parse_optional_int(nb_etoiles)
     property_.date_classement = _parse_optional_date(date_classement)

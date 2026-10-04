@@ -15,12 +15,31 @@
 </form>
 
 <div class="chart-container"><canvas id="chart-charges"></canvas></div>
-<p><strong>Total {{ annee }} : {{ "%.2f"|format(total_annee) }} €</strong></p>
+<p><strong>Total {{ annee }} : {{ "%.2f"|format(total_annee) }} €</strong> — dont récupérable : {{ "%.2f"|format(total_recuperable) }} €</p>
+
+<h2>Appel de fonds de copropriété</h2>
+<p>Crée en une fois les deux lignes habituelles d'un appel : charges courantes (avec part récupérable) + fonds de travaux.</p>
+<form method="post" action="/biens/{{ property_.id }}/charges/appel-de-fonds">
+    <label>Date de paiement <input type="date" name="date_paiement" required></label>
+    <label>Date d'échéance de l'appel <input type="date" name="date_echeance"></label>
+    <label>Période début <input type="date" name="periode_debut"></label>
+    <label>Période fin <input type="date" name="periode_fin"></label>
+    <label>Montant charges courantes (€) <input type="number" step="0.01" name="montant_courantes" required></label>
+    <label>dont récupérable auprès du locataire (€) <input type="number" step="0.01" name="montant_recuperable_courantes" value="0"></label>
+    <label>Montant fonds de travaux (€) <input type="number" step="0.01" name="montant_fonds_travaux" value="0"></label>
+    <label>Fournisseur / syndic <input type="text" name="fournisseur"></label>
+    <label>Description <input type="text" name="description"></label>
+    <button type="submit">Créer l'appel de fonds</button>
+</form>
 
 <h2>{% if expense_edit %}Modifier la charge{% else %}Ajouter une charge{% endif %}</h2>
 <form method="post" action="{% if expense_edit %}/biens/{{ property_.id }}/charges/{{ expense_edit.id }}{% else %}/biens/{{ property_.id }}/charges{% endif %}">
-    <label>Date <input type="date" name="date" value="{{ expense_edit.date if expense_edit else '' }}" required></label>
+    <label>Date de paiement — détermine l'année fiscale <input type="date" name="date_paiement" value="{{ expense_edit.date_paiement if expense_edit else '' }}" required></label>
+    <label>Date d'échéance — informatif <input type="date" name="date_echeance" value="{{ expense_edit.date_echeance if expense_edit and expense_edit.date_echeance else '' }}"></label>
+    <label>Période début <input type="date" name="periode_debut" value="{{ expense_edit.periode_debut if expense_edit and expense_edit.periode_debut else '' }}"></label>
+    <label>Période fin <input type="date" name="periode_fin" value="{{ expense_edit.periode_fin if expense_edit and expense_edit.periode_fin else '' }}"></label>
     <label>Montant TTC (€) <input type="number" step="0.01" name="montant_ttc" value="{{ expense_edit.montant_ttc if expense_edit else '' }}" required></label>
+    <label>dont récupérable auprès du locataire (€) <input type="number" step="0.01" name="montant_recuperable" value="{{ expense_edit.montant_recuperable if expense_edit else 0 }}"></label>
     <label>Fournisseur <input type="text" name="fournisseur" value="{{ expense_edit.fournisseur if expense_edit and expense_edit.fournisseur else '' }}"></label>
     <label>Description <input type="text" name="description" value="{{ expense_edit.description if expense_edit and expense_edit.description else '' }}"></label>
     <label>Catégorie
@@ -43,13 +62,14 @@
 <h2>Charges {{ annee }}</h2>
 {% if expenses %}
 <table>
-    <thead><tr><th>Date</th><th>Catégorie</th><th>Montant TTC</th><th>Fournisseur</th><th>Pièces jointes</th><th>Récurrence</th><th></th></tr></thead>
+    <thead><tr><th>Payé le</th><th>Catégorie</th><th>Montant TTC</th><th>dont récupérable</th><th>Fournisseur</th><th>Pièces jointes</th><th>Récurrence</th><th></th></tr></thead>
     <tbody>
     {% for e in expenses %}
         <tr>
-            <td>{{ e.date }}</td>
+            <td>{{ e.date_paiement }}</td>
             <td>{{ e.categorie.value }}</td>
             <td>{{ "%.2f"|format(e.montant_ttc) }} €</td>
+            <td>{{ "%.2f"|format(e.montant_recuperable) }} €</td>
             <td>{{ e.fournisseur or "" }}</td>
             <td>
                 {% set entity_type = "expense" %}
@@ -89,7 +109,11 @@
             labels: {{ totaux_categorie.keys() | list | tojson }},
             datasets: [{
                 data: {{ totaux_categorie.values() | list | tojson }},
-                backgroundColor: ['#2f5d50','#8a5a00','#4a6b8a','#a33f3f','#6b4a8a','#3f8a6b','#8a6b3f','#555','#2f8d9a','#9a2f6a','#6a9a2f','#9a6a2f'],
+                backgroundColor: [
+                    '#2f5d50','#8a5a00','#4a6b8a','#a33f3f','#6b4a8a','#3f8a6b','#8a6b3f','#555',
+                    '#2f8d9a','#9a2f6a','#6a9a2f','#9a6a2f','#5a2f9a','#2f9a5a','#9a5a2f','#2f5a9a',
+                    '#9a2f2f','#2f9a9a',
+                ],
             }]
         },
         options: { responsive: true, maintainAspectRatio: false }

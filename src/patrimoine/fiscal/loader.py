@@ -54,10 +54,21 @@ class PrelevementsSociaux(BaseModel):
     verified: bool = False
 
 
+class TraitementCategorieCharge(BaseModel):
+    """Traitement d'une catégorie de charge par régime :
+    deductible / non_deductible / immobilisation / immobilisation_si_seuil / a_qualifier.
+    `foncier_reel` n'est pas encore consommé par le code (régime pas encore implémenté),
+    mais vit déjà dans ce fichier pour ne pas avoir à re-migrer plus tard."""
+
+    lmnp_reel: str
+    foncier_reel: str
+
+
 class FiscalParams(BaseModel):
     year: int
     meuble_tourisme: MeubleTourisme
     prelevements_sociaux: PrelevementsSociaux
+    categories_charges: dict[str, TraitementCategorieCharge] = {}
     cases_declaration: dict = {}
 
     def unverified_warnings(self) -> list[str]:

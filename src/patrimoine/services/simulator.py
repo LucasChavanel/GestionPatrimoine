@@ -84,25 +84,46 @@ class SimulationResult:
     avertissements: list[str] = field(default_factory=list)
 
 
-def _recettes_annee(session: Session, property_id: int, annee: int) -> float:
+def _recettes_annee(session: Session, property_: Property, annee: int) -> float:
     """Comptabilité de caisse : une réservation compte dans les recettes de
     l'année où elle est encaissée (date_paiement), pas l'année du séjour. Tant
-    que date_paiement n'est pas renseignée, ce n'est pas encore une recette."""
-    bookings = session.exec(select(Booking).where(Booking.property_id == property_id)).all()
-    return sum(
+    que date_paiement n'est pas renseignée, ce n'est pas encore une recette.
+    Mise à l'échelle par quote_part (part de détention, 1.0 par défaut)."""
+    bookings = session.exec(select(Booking).where(Booking.property_id == property_.id)).all()
+    brut = sum(
         b.montant_brut
         for b in bookings
         if b.statut == StatutBooking.confirmee
         and b.date_paiement is not None
         and b.date_paiement.year == annee
     )
+    return brut * property_.quote_part
 
 
-def _charges_deductibles_annee(session: Session, property_id: int, annee: int) -> float:
-    expenses = session.exec(select(Expense).where(Expense.property_id == property_id)).all()
-    total = sum(e.montant_ttc for e in expenses if e.date.year == annee)
+def _categorie_deductible_lmnp(expense: Expense, fiscal_params: FiscalParams) -> bool:
+    """Déductibilité LMNP réel d'une charge, pilotée par la table catégorie→traitement
+    du fichier fiscal (jamais en dur). `a_qualifier` est traité comme déductible par
+    défaut (comportement historique) — un avertissement est affiché séparément."""
+    traitement = fiscal_params.categories_charges.get(expense.categorie.value)
+    if traitement is None:
+        return True  # catégorie non répertoriée : ne pas bloquer silencieusement
+    if traitement.lmnp_reel == "immobilisation_si_seuil":
+        seuil = fiscal_params.meuble_tourisme.amortissement.seuil_charge_directe_mobilier
+        return expense.montant_ttc < seuil
+    return traitement.lmnp_reel in ("deductible", "a_qualifier")
 
-    bookings = session.exec(select(Booking).where(Booking.property_id == property_id)).all()
+
+def _charges_deductibles_annee(session: Session, property_: Property, annee: int) -> float:
+    expenses = session.exec(select(Expense).where(Expense.property_id == property_.id)).all()
+    total = 0.0
+    for e in expenses:
+        if e.date_paiement.year != annee:
+            continue
+        fiscal_params = load_fiscal_params(e.date_paiement.year)
+        if _categorie_deductible_lmnp(e, fiscal_params):
+            total += e.montant_ttc
+
+    bookings = session.exec(select(Booking).where(Booking.property_id == property_.id)).all()
     total += sum(
         b.commission_plateforme
         for b in bookings
@@ -111,7 +132,7 @@ def _charges_deductibles_annee(session: Session, property_id: int, annee: int) -
         and b.date_paiement.year == annee
     )
 
-    works = session.exec(select(Works).where(Works.property_id == property_id)).all()
+    works = session.exec(select(Works).where(Works.property_id == property_.id)).all()
     total += sum(
         w.montant_ttc
         for w in works
@@ -120,14 +141,32 @@ def _charges_deductibles_annee(session: Session, property_id: int, annee: int) -
         and w.date.year == annee
     )
 
-    furniture = session.exec(select(Furniture).where(Furniture.property_id == property_id)).all()
+    furniture = session.exec(select(Furniture).where(Furniture.property_id == property_.id)).all()
     for f in furniture:
         if f.date_achat.year == annee:
             params_achat = load_fiscal_params(f.date_achat.year)
             if is_furniture_charge_directe(f, params_achat):
                 total += f.montant_ttc
 
-    return total
+    return total * property_.quote_part
+
+
+def _avertissements_charges_a_qualifier(session: Session, property_: Property, annee: int) -> list[str]:
+    expenses = session.exec(select(Expense).where(Expense.property_id == property_.id)).all()
+    fiscal_params = load_fiscal_params(annee)
+    nb_a_qualifier = sum(
+        1
+        for e in expenses
+        if e.date_paiement.year == annee
+        and fiscal_params.categories_charges.get(e.categorie.value, None) is not None
+        and fiscal_params.categories_charges[e.categorie.value].lmnp_reel == "a_qualifier"
+    )
+    if nb_a_qualifier == 0:
+        return []
+    return [
+        f"{nb_a_qualifier} charge(s) en catégorie 'autre' pour {annee} : à qualifier "
+        "manuellement, comptées comme déductibles par défaut en attendant."
+    ]
 
 
 def _amortissements_theoriques_annee(session: Session, property_: Property, annee: int) -> float:
@@ -145,7 +184,7 @@ def _amortissements_theoriques_annee(session: Session, property_: Property, anne
         params_achat = load_fiscal_params(f.date_achat.year)
         total += dotation_furniture(f, annee, params_achat)
 
-    return total
+    return total * property_.quote_part
 
 
 def _resoudre_annee(
@@ -219,8 +258,8 @@ def _simulate_reel(
     data_annee_courante: ReelYearData | None = None
 
     for y in range(annee_debut, annee + 1):
-        resultat_brut = _recettes_annee(session, property_.id, y) - _charges_deductibles_annee(
-            session, property_.id, y
+        resultat_brut = _recettes_annee(session, property_, y) - _charges_deductibles_annee(
+            session, property_, y
         )
         amortissements_theoriques = _amortissements_theoriques_annee(session, property_, y)
         data, stock_amort_non_deduit, stock_deficits = _resoudre_annee(
@@ -236,8 +275,8 @@ def _simulate_reel(
 
     return ReelResult(
         annee=annee,
-        recettes=_recettes_annee(session, property_.id, annee),
-        charges_deductibles=_charges_deductibles_annee(session, property_.id, annee),
+        recettes=_recettes_annee(session, property_, annee),
+        charges_deductibles=_charges_deductibles_annee(session, property_, annee),
         amortissements_theoriques=data_annee_courante.amortissements_theoriques,
         amortissements_deduits_annee=data_annee_courante.amortissements_deduits,
         amortissements_non_deduits_annee=data_annee_courante.amortissements_non_deduits_annee,
@@ -272,7 +311,7 @@ def _simulate_micro(
 
 def simulate_year(session: Session, property_: Property, annee: int, tmi: float) -> SimulationResult:
     fiscal_params: FiscalParams = load_fiscal_params(annee)
-    recettes = _recettes_annee(session, property_.id, annee)
+    recettes = _recettes_annee(session, property_, annee)
     taux_ps = fiscal_params.prelevements_sociaux.revenus_bic_lmnp
 
     micro_non_classe = _simulate_micro(recettes, fiscal_params.meuble_tourisme.micro_bic.non_classe, tmi, taux_ps)
@@ -280,6 +319,7 @@ def simulate_year(session: Session, property_: Property, annee: int, tmi: float)
     reel = _simulate_reel(session, property_, annee, tmi, taux_ps)
 
     avertissements = list(fiscal_params.unverified_warnings())
+    avertissements.extend(_avertissements_charges_a_qualifier(session, property_, annee))
     if not micro_non_classe.applicable:
         avertissements.append(
             f"Micro-BIC non classé non applicable : recettes {recettes:.0f} € > "

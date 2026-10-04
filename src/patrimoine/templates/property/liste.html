@@ -5,13 +5,14 @@
 
 {% if properties %}
 <table>
-    <thead><tr><th>Nom</th><th>Adresse</th><th>Statut</th><th></th></tr></thead>
+    <thead><tr><th>Nom</th><th>Adresse</th><th>Type de location</th><th>Quote-part</th><th></th></tr></thead>
     <tbody>
     {% for p in properties %}
         <tr>
             <td>{{ p.nom }}</td>
             <td>{{ p.adresse }}</td>
-            <td>{{ p.statut_classement.value }}</td>
+            <td>{{ p.type_location.value }}</td>
+            <td>{{ (p.quote_part * 100)|round(0)|int }} %</td>
             <td><a href="/biens/{{ p.id }}">Ouvrir</a></td>
         </tr>
     {% endfor %}
@@ -30,6 +31,16 @@
     <label>Prix d'acquisition (€) <input type="number" step="0.01" name="prix_acquisition" required></label>
     <label>Frais de notaire (€) <input type="number" step="0.01" name="frais_notaire" value="0"></label>
     <label>Part du terrain (%, non amortissable) <input type="number" step="0.01" name="part_terrain_pct" value="0"></label>
+    <label>Type de location
+        <select name="type_location">
+            {% for t in types_location %}
+            <option value="{{ t.value }}">{{ t.value }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Quote-part de détention (1 = pleine propriété, &lt; 1 si indivision)
+        <input type="number" step="0.01" min="0" max="1" name="quote_part" value="1">
+    </label>
     <button type="submit">Créer le bien</button>
 </form>
 {% endblock %}

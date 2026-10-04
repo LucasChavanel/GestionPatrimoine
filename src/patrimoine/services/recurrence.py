@@ -37,7 +37,7 @@ def generate_occurrences(session: Session, template: Expense, until: date) -> in
             (Expense.id == template.id) | (Expense.parent_expense_id == template.id)
         )
     ).all()
-    last_date = max(e.date for e in existing)
+    last_date = max(e.date_paiement for e in existing)
 
     created = 0
     current = last_date
@@ -48,7 +48,7 @@ def generate_occurrences(session: Session, template: Expense, until: date) -> in
         session.add(
             Expense(
                 property_id=template.property_id,
-                date=current,
+                date_paiement=current,
                 montant_ttc=template.montant_ttc,
                 fournisseur=template.fournisseur,
                 description=template.description,
