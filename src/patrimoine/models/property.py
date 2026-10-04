@@ -31,6 +31,11 @@ class Property(SQLModel, table=True):
     numero_declaration_mairie: str | None = None
     date_premiere_mise_en_location: date | None = None
 
+    # Valorisation actuelle, saisie manuelle (aucune source automatique) — si
+    # absente, le dashboard consolidé retombe sur prix_acquisition.
+    valeur_estimee: float | None = None
+    valeur_estimee_date: date | None = None
+
     # Détermine le régime fiscal applicable (micro-BIC vs foncier) — découplé du
     # statut_classement ci-dessus, qui reste un détail administratif informatif.
     type_location: TypeLocation = TypeLocation.meuble_tourisme_non_classe

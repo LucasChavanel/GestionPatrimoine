@@ -18,6 +18,10 @@
         <label>Prix d'acquisition (€) <input type="number" step="0.01" name="prix_acquisition" value="{{ property_.prix_acquisition }}" required></label>
         <label>Frais de notaire (€) <input type="number" step="0.01" name="frais_notaire" value="{{ property_.frais_notaire }}"></label>
         <label>Part du terrain (%, non amortissable) <input type="number" step="0.01" name="part_terrain_pct" value="{{ property_.part_terrain_pct }}"></label>
+        <label>Valeur estimée actuelle (€, optionnel — sinon le dashboard consolidé retombe sur le prix d'acquisition)
+            <input type="number" step="0.01" name="valeur_estimee" value="{{ property_.valeur_estimee if property_.valeur_estimee else '' }}">
+        </label>
+        <label>Date de l'estimation <input type="date" name="valeur_estimee_date" value="{{ property_.valeur_estimee_date if property_.valeur_estimee_date else '' }}"></label>
 
         <label>Type de location — détermine le régime fiscal applicable
             <select name="type_location">

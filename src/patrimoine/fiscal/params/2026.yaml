@@ -70,3 +70,12 @@ pea:
   allocation_europe_bande_max_pct: 0.25
   source: "Spec module investissements 2026-10-04 — à vérifier"
   verified: false
+patrimoine_global:
+  # Répartition géographique estimée d'un ETF "World" (ex. MSCI World) — sert
+  # uniquement à l'exposition géographique affichée sur le dashboard consolidé,
+  # jamais à un calcul fiscal. Le reste du World (hors US et hors Europe, ex.
+  # Japon/Canada/Australie) n'est pas attribué à une zone — simplification assumée.
+  part_us_dans_world: 0.72
+  part_europe_dans_world: 0.10
+  source: "Composition approximative MSCI World 2026-10-04 — à vérifier"
+  verified: false

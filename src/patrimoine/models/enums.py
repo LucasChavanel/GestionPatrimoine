@@ -99,9 +99,12 @@ class TypeTransaction(str, Enum):
     retrait = "retrait"
     frais = "frais"
     change = "change"
+    interet = "interet"
 
 
 class AllocationCategorie(str, Enum):
     world = "world"
     europe = "europe"
+    emergents = "emergents"
+    or_metal = "or_metal"
     autre = "autre"
