@@ -16,9 +16,9 @@ def test_add_months_gere_les_fins_de_mois():
 def test_generate_occurrences_mensuelle(session):
     template = Expense(
         property_id=1,
-        date=date(2026, 1, 15),
+        date_paiement=date(2026, 1, 15),
         montant_ttc=100.0,
-        categorie=CategorieCharge.energie,
+        categorie=CategorieCharge.energie_internet,
         recurrence=Recurrence.mensuelle,
     )
     session.add(template)
@@ -30,16 +30,16 @@ def test_generate_occurrences_mensuelle(session):
 
     all_expenses = session.exec(select(Expense)).all()
     assert len(all_expenses) == 6
-    dates = sorted(e.date for e in all_expenses)
+    dates = sorted(e.date_paiement for e in all_expenses)
     assert dates == [date(2026, m, 15) for m in range(1, 7)]
 
 
 def test_generate_occurrences_est_idempotent(session):
     template = Expense(
         property_id=1,
-        date=date(2026, 1, 15),
+        date_paiement=date(2026, 1, 15),
         montant_ttc=100.0,
-        categorie=CategorieCharge.energie,
+        categorie=CategorieCharge.energie_internet,
         recurrence=Recurrence.mensuelle,
     )
     session.add(template)
@@ -56,7 +56,7 @@ def test_generate_occurrences_est_idempotent(session):
 def test_generate_occurrences_aucune_pour_charge_non_recurrente(session):
     template = Expense(
         property_id=1,
-        date=date(2026, 1, 15),
+        date_paiement=date(2026, 1, 15),
         montant_ttc=100.0,
         categorie=CategorieCharge.autre,
         recurrence=Recurrence.aucune,

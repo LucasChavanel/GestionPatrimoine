@@ -102,7 +102,9 @@ def test_reel_deficit_puis_imputation_annee_suivante(session):
         )
     )
     # 2020 : pas de recettes, une charge -> deficit avant amortissement.
-    session.add(Expense(property_id=p.id, date=date(2020, 3, 1), montant_ttc=6_000, categorie="autre"))
+    session.add(
+        Expense(property_id=p.id, date_paiement=date(2020, 3, 1), montant_ttc=6_000, categorie="autre")
+    )
     session.commit()
 
     r2020 = simulate_year(session, p, 2020, tmi=0.30).reel
@@ -161,6 +163,40 @@ def test_recette_non_encaissee_exclue_des_totaux(session):
 
     result = simulate_year(session, p, 2026, tmi=0.30)
     assert result.recettes == 0.0
+
+
+def test_fonds_travaux_non_deductible(session):
+    # Un fonds de travaux n'est pas deductible tant qu'il n'est pas utilise :
+    # une Expense categorie=fonds_travaux ne doit pas reduire le resultat du reel.
+    p = _make_property(session)
+    session.add(_booking(p.id, 10_000, 2026))
+    session.add(
+        Expense(
+            property_id=p.id,
+            date_paiement=date(2026, 3, 1),
+            montant_ttc=2_000,
+            categorie="fonds_travaux",
+        )
+    )
+    session.commit()
+
+    result = simulate_year(session, p, 2026, tmi=0.30)
+    assert result.reel.charges_deductibles == 0.0
+    assert result.reel.resultat_imposable == 10_000.0
+
+
+def test_quote_part_reduit_la_base_proportionnellement(session):
+    p_plein = _make_property(session, quote_part=1.0)
+    p_moitie = _make_property(session, nom="Test indivision", quote_part=0.5)
+    session.add(_booking(p_plein.id, 10_000, 2026))
+    session.add(_booking(p_moitie.id, 10_000, 2026))
+    session.commit()
+
+    result_plein = simulate_year(session, p_plein, 2026, tmi=0.30)
+    result_moitie = simulate_year(session, p_moitie, 2026, tmi=0.30)
+
+    assert result_plein.recettes == 10_000.0
+    assert result_moitie.recettes == 5_000.0
 
 
 def test_reel_works_avant_mise_en_location_integre_a_la_base(session):

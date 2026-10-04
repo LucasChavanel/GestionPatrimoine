@@ -8,8 +8,8 @@ meuble_tourisme:
       verified: false
     classe:
       abattement: 0.50
-      plafond_recettes: 83600
-      source: "à vérifier"
+      plafond_recettes: 77700
+      source: "Spec module locatif 2026-10-04 — à vérifier"
       verified: false
   amortissement:
     seuil_charge_directe_mobilier: 600 # HT, usage courant — à vérifier
@@ -25,4 +25,26 @@ prelevements_sociaux:
   revenus_bic_lmnp: 0.172 # à vérifier selon nature du revenu
   revenus_capital_mobilier: 0.186
   verified: false
+# Traitement de chaque catégorie de charge par régime : deductible / non_deductible /
+# immobilisation / immobilisation_si_seuil / a_qualifier. foncier_reel pas encore
+# consommé par le code (régime pas encore implémenté), gardé pour éviter une
+# re-migration plus tard. Source : Spec module locatif 2026-10-04 — à vérifier.
+categories_charges:
+  copro_courantes: { lmnp_reel: deductible, foncier_reel: deductible }
+  copro_regularisation: { lmnp_reel: deductible, foncier_reel: deductible }
+  fonds_travaux: { lmnp_reel: non_deductible, foncier_reel: non_deductible }
+  taxe_fonciere: { lmnp_reel: deductible, foncier_reel: deductible }
+  assurance_pno: { lmnp_reel: deductible, foncier_reel: deductible }
+  frais_gestion: { lmnp_reel: deductible, foncier_reel: deductible }
+  menage_linge: { lmnp_reel: deductible, foncier_reel: non_applicable }
+  energie_internet: { lmnp_reel: deductible, foncier_reel: deductible }
+  eau: { lmnp_reel: deductible, foncier_reel: deductible }
+  entretien_reparation: { lmnp_reel: deductible, foncier_reel: deductible }
+  travaux_amelioration: { lmnp_reel: immobilisation, foncier_reel: deductible }
+  mobilier: { lmnp_reel: immobilisation_si_seuil, foncier_reel: non_applicable }
+  interets_emprunt: { lmnp_reel: deductible, foncier_reel: deductible }
+  assurance_emprunteur: { lmnp_reel: deductible, foncier_reel: deductible }
+  frais_comptable: { lmnp_reel: deductible, foncier_reel: non_applicable }
+  cfe: { lmnp_reel: deductible, foncier_reel: non_applicable }
+  autre: { lmnp_reel: a_qualifier, foncier_reel: a_qualifier }
 cases_declaration: {} # rempli en Phase 4, numéros vérifiés chaque année

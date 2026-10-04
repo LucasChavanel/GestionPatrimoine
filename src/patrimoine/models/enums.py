@@ -32,19 +32,30 @@ class ReversementTaxeSejour(str, Enum):
     utilisateur = "utilisateur"
 
 
+class TypeLocation(str, Enum):
+    meuble_classique = "meuble_classique"
+    meuble_tourisme_classe = "meuble_tourisme_classe"
+    meuble_tourisme_non_classe = "meuble_tourisme_non_classe"
+    nu = "nu"
+
+
 class CategorieCharge(str, Enum):
-    copropriete = "copropriete"
-    assurance = "assurance"
+    copro_courantes = "copro_courantes"
+    copro_regularisation = "copro_regularisation"
+    fonds_travaux = "fonds_travaux"
     taxe_fonciere = "taxe_fonciere"
-    energie = "energie"
+    assurance_pno = "assurance_pno"
+    frais_gestion = "frais_gestion"
+    menage_linge = "menage_linge"
+    energie_internet = "energie_internet"
     eau = "eau"
-    internet = "internet"
-    menage = "menage"
-    linge = "linge"
-    entretien = "entretien"
-    frais_plateforme_autres = "frais_plateforme_autres"
-    comptabilite = "comptabilite"
+    entretien_reparation = "entretien_reparation"
+    travaux_amelioration = "travaux_amelioration"
+    mobilier = "mobilier"
     interets_emprunt = "interets_emprunt"
+    assurance_emprunteur = "assurance_emprunteur"
+    frais_comptable = "frais_comptable"
+    cfe = "cfe"
     autre = "autre"
 
 

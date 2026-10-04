@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel
 
-from .enums import NatureComposant, StatutClassement
+from .enums import NatureComposant, StatutClassement, TypeLocation
 
 if TYPE_CHECKING:
     from .booking import Booking
@@ -31,6 +31,13 @@ class Property(SQLModel, table=True):
 
     numero_declaration_mairie: str | None = None
     date_premiere_mise_en_location: date | None = None
+
+    # Détermine le régime fiscal applicable (micro-BIC vs foncier) — découplé du
+    # statut_classement ci-dessus, qui reste un détail administratif informatif.
+    type_location: TypeLocation = TypeLocation.meuble_tourisme_non_classe
+    # Quote-part de détention (1.0 = pleine propriété). Appliquée au moment du
+    # calcul fiscal (services/simulator.py), pas sur les écrans de saisie bruts.
+    quote_part: float = 1.0
 
     building_components: list["BuildingComponent"] = Relationship(back_populates="property_")
     bookings: list["Booking"] = Relationship(back_populates="property_")
