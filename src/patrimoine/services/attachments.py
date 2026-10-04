@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import List, Optional
 
 from sqlmodel import Session, select
 
@@ -17,7 +16,7 @@ def save_attachment(
     session: Session,
     content: bytes,
     original_filename: str,
-    content_type: Optional[str],
+    content_type: str | None,
     entity_type: EntityType,
     entity_id: int,
 ) -> Attachment:
@@ -42,7 +41,7 @@ def save_attachment(
     return attachment
 
 
-def list_attachments(session: Session, entity_type: EntityType, entity_id: int) -> List[Attachment]:
+def list_attachments(session: Session, entity_type: EntityType, entity_id: int) -> list[Attachment]:
     return session.exec(
         select(Attachment).where(
             Attachment.entity_type == entity_type, Attachment.entity_id == entity_id

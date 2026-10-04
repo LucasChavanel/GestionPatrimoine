@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -10,7 +9,7 @@ from .property import Property
 class Booking(SQLModel, table=True):
     __tablename__ = "booking"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     property_id: int = Field(foreign_key="property.id")
 
     date_arrivee: date
@@ -26,11 +25,11 @@ class Booking(SQLModel, table=True):
     # Champs informatifs uniquement — n'entrent dans aucun calcul de net encaissé
     # ni de recette fiscale, pour éviter un double comptage avec montant_brut.
     taxe_sejour_collectee: float = 0.0
-    taxe_sejour_reversee_par: Optional[ReversementTaxeSejour] = None
+    taxe_sejour_reversee_par: ReversementTaxeSejour | None = None
     frais_menage_factures: float = 0.0
 
     statut: StatutBooking = StatutBooking.confirmee
-    notes: Optional[str] = None
+    notes: str | None = None
 
     property_: Property = Relationship(back_populates="bookings")
 

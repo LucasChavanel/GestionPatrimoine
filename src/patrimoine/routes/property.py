@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -16,13 +15,13 @@ from ..models.property import BuildingComponent, Property
 router = APIRouter(prefix="/appartement")
 
 
-def _parse_optional_date(value: Optional[str]) -> Optional[date]:
+def _parse_optional_date(value: str | None) -> date | None:
     if not value:
         return None
     return date.fromisoformat(value)
 
 
-def _parse_optional_int(value: Optional[str]) -> Optional[int]:
+def _parse_optional_int(value: str | None) -> int | None:
     if not value:
         return None
     return int(value)
@@ -55,10 +54,10 @@ def enregistrer(
     frais_notaire: float = Form(0.0),
     part_terrain_pct: float = Form(0.0),
     statut_classement: StatutClassement = Form(StatutClassement.non_classe),
-    nb_etoiles: Optional[str] = Form(None),
-    date_classement: Optional[str] = Form(None),
-    numero_declaration_mairie: Optional[str] = Form(None),
-    date_premiere_mise_en_location: Optional[str] = Form(None),
+    nb_etoiles: str | None = Form(None),
+    date_classement: str | None = Form(None),
+    numero_declaration_mairie: str | None = Form(None),
+    date_premiere_mise_en_location: str | None = Form(None),
 ):
     property_ = get_the_property(session)
     if property_ is None:

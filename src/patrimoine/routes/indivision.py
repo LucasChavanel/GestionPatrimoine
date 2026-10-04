@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
@@ -57,9 +55,9 @@ def _form_to_year(
     quote_part_pct: float,
     revenus_bruts: float,
     charges: float,
-    montants_proratises: Optional[str],
-    regime_declare: Optional[str],
-    montants_a_reporter: Optional[str],
+    montants_proratises: str | None,
+    regime_declare: str | None,
+    montants_a_reporter: str | None,
 ) -> None:
     year.annee = annee
     year.libelle = libelle
@@ -79,9 +77,9 @@ def creer(
     quote_part_pct: float = Form(...),
     revenus_bruts: float = Form(...),
     charges: float = Form(...),
-    montants_proratises: Optional[str] = Form(None),
-    regime_declare: Optional[str] = Form(None),
-    montants_a_reporter: Optional[str] = Form(None),
+    montants_proratises: str | None = Form(None),
+    regime_declare: str | None = Form(None),
+    montants_a_reporter: str | None = Form(None),
 ):
     year = CoOwnershipYear(annee=annee, libelle=libelle, quote_part_pct=quote_part_pct,
                             revenus_bruts=revenus_bruts, charges=charges, montants_proratises=False)
@@ -103,9 +101,9 @@ def modifier(
     quote_part_pct: float = Form(...),
     revenus_bruts: float = Form(...),
     charges: float = Form(...),
-    montants_proratises: Optional[str] = Form(None),
-    regime_declare: Optional[str] = Form(None),
-    montants_a_reporter: Optional[str] = Form(None),
+    montants_proratises: str | None = Form(None),
+    regime_declare: str | None = Form(None),
+    montants_a_reporter: str | None = Form(None),
 ):
     year = session.get(CoOwnershipYear, year_id)
     if year is None:

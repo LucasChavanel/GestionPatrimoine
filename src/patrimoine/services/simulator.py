@@ -13,7 +13,6 @@ valider avec un professionnel. »
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Tuple
 
 from sqlmodel import Session, select
 
@@ -82,7 +81,7 @@ class SimulationResult:
     micro_non_classe: MicroBicResult
     micro_classe: MicroBicResult
     reel: ReelResult
-    avertissements: List[str] = field(default_factory=list)
+    avertissements: list[str] = field(default_factory=list)
 
 
 def _recettes_annee(session: Session, property_id: int, annee: int) -> float:
@@ -146,9 +145,9 @@ def _resoudre_annee(
     resultat_brut: float,
     amortissements_theoriques: float,
     stock_amort_non_deduit_entrant: float,
-    stock_deficits_entrants: List[Tuple[int, float]],
+    stock_deficits_entrants: list[tuple[int, float]],
     annee: int,
-) -> Tuple[ReelYearData, float, List[Tuple[int, float]]]:
+) -> tuple[ReelYearData, float, list[tuple[int, float]]]:
     """Applique la règle « l'amortissement ne peut pas créer ou augmenter un déficit »
     puis impute les reports des années antérieures (amortissements non déduits :
     illimité ; déficits : 10 ans). Retourne les nouveaux stocks à reporter."""
@@ -208,7 +207,7 @@ def _simulate_reel(
         annee_debut = annee  # bien pas encore en activité : résultat nul
 
     stock_amort_non_deduit = 0.0
-    stock_deficits: List[Tuple[int, float]] = []
+    stock_deficits: list[tuple[int, float]] = []
     cumul_amortissements_deduits = 0.0
     data_annee_courante: ReelYearData | None = None
 

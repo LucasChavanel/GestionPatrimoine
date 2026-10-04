@@ -1,5 +1,5 @@
 from datetime import date
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Property(SQLModel, table=True):
     __tablename__ = "property"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     nom: str
     adresse: str
     surface: float
@@ -26,17 +26,17 @@ class Property(SQLModel, table=True):
     part_terrain_pct: float = 0.0  # non amortissable, saisie manuelle
 
     statut_classement: StatutClassement = StatutClassement.non_classe
-    nb_etoiles: Optional[int] = None
-    date_classement: Optional[date] = None
+    nb_etoiles: int | None = None
+    date_classement: date | None = None
 
-    numero_declaration_mairie: Optional[str] = None
-    date_premiere_mise_en_location: Optional[date] = None
+    numero_declaration_mairie: str | None = None
+    date_premiere_mise_en_location: date | None = None
 
-    building_components: List["BuildingComponent"] = Relationship(back_populates="property_")
-    bookings: List["Booking"] = Relationship(back_populates="property_")
-    expenses: List["Expense"] = Relationship(back_populates="property_")
-    works: List["Works"] = Relationship(back_populates="property_")
-    furniture: List["Furniture"] = Relationship(back_populates="property_")
+    building_components: list["BuildingComponent"] = Relationship(back_populates="property_")
+    bookings: list["Booking"] = Relationship(back_populates="property_")
+    expenses: list["Expense"] = Relationship(back_populates="property_")
+    works: list["Works"] = Relationship(back_populates="property_")
+    furniture: list["Furniture"] = Relationship(back_populates="property_")
 
     @property
     def base_amortissable(self) -> float:
@@ -53,7 +53,7 @@ class Property(SQLModel, table=True):
 class BuildingComponent(SQLModel, table=True):
     __tablename__ = "building_component"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     property_id: int = Field(foreign_key="property.id")
 
     nature: NatureComposant

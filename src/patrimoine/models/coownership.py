@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
@@ -9,7 +8,7 @@ class CoOwnershipYear(SQLModel, table=True):
 
     __tablename__ = "coownership_year"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     annee: int
     libelle: str  # nom ou libellé du bien / de l'ensemble
@@ -19,5 +18,5 @@ class CoOwnershipYear(SQLModel, table=True):
     charges: float
     montants_proratises: bool  # True si revenus_bruts/charges sont déjà à la quote-part
 
-    regime_declare: Optional[str] = None  # texte libre
-    montants_a_reporter: Optional[str] = None  # texte libre, saisi tel que transmis
+    regime_declare: str | None = None  # texte libre
+    montants_a_reporter: str | None = None  # texte libre, saisi tel que transmis

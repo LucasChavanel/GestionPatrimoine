@@ -11,7 +11,7 @@ import io
 import shutil
 import sqlite3
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pyzipper
@@ -55,7 +55,7 @@ def mark_backup_done(session: Session) -> None:
     settings = session.get(AppSettings, 1)
     if settings is None:
         settings = AppSettings(id=1)
-    settings.last_backup_at = datetime.now(timezone.utc)
+    settings.last_backup_at = datetime.now(UTC)
     session.add(settings)
     session.commit()
 
@@ -83,7 +83,7 @@ def restore_encrypted_archive(password: str, archive_bytes: bytes) -> None:
 
         data_dir = get_data_dir()
         documents_dir = get_documents_dir()
-        suffix = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        suffix = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
         db_path = get_database_path()
         if db_path.exists():

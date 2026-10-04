@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
@@ -16,7 +15,7 @@ router = APIRouter(prefix="/appartement/simulateur")
 @router.get("")
 def simulateur(
     request: Request,
-    annee: Optional[int] = None,
+    annee: int | None = None,
     tmi_pct: float = 30.0,
     session: Session = Depends(get_session),
 ):

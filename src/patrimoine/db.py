@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
-from alembic import command
 from alembic.config import Config
 from sqlmodel import Session, create_engine
 
-from . import config
-from . import models  # noqa: F401  s'assure que toutes les tables sont enregistrées
+from alembic import command
+
+from . import (
+    config,
+    models,  # noqa: F401  s'assure que toutes les tables sont enregistrées
+)
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
