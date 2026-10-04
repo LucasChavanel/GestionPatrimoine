@@ -1,3 +1,4 @@
+from .agency import Agency
 from .attachment import Attachment
 from .booking import Booking
 from .coownership import CoOwnershipYear
@@ -9,6 +10,7 @@ from .settings import AppSettings
 from .works import Works
 
 __all__ = [
+    "Agency",
     "Attachment",
     "Booking",
     "CoOwnershipYear",

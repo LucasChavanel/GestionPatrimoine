@@ -19,9 +19,10 @@
 </form>
 
 <canvas id="chart-recettes" height="100"></canvas>
+<p class="disclaimer">Recettes encaissées par mois, basées sur la date de paiement (pas la date de séjour) — voir la colonne "Payé le" ci-dessous.</p>
 
 <h2>{% if booking_edit %}Modifier la réservation{% else %}Ajouter une réservation{% endif %}</h2>
-<form method="post" action="{% if booking_edit %}/appartement/reservations/{{ booking_edit.id }}{% else %}/appartement/reservations{% endif %}">
+<form method="post" action="{% if booking_edit %}/appartement/reservations/{{ booking_edit.id }}{% else %}/appartement/reservations{% endif %}" id="form-reservation">
     <label>Date d'arrivée <input type="date" name="date_arrivee" value="{{ booking_edit.date_arrivee if booking_edit else '' }}" required></label>
     <label>Date de départ <input type="date" name="date_depart" value="{{ booking_edit.date_depart if booking_edit else '' }}" required></label>
     <label>Plateforme
@@ -31,10 +32,28 @@
             {% endfor %}
         </select>
     </label>
-    <label>Montant brut — tout compris, hors taxe de séjour (€)
-        <input type="number" step="0.01" name="montant_brut" value="{{ booking_edit.montant_brut if booking_edit else '' }}" required>
+    <label>Agence
+        <select name="agency_id" id="champ_agence">
+            <option value="">— aucune —</option>
+            {% for a in agencies %}
+            <option value="{{ a.id }}" data-commission-pct="{{ a.commission_pct_defaut }}" {% if booking_edit and booking_edit.agency_id == a.id %}selected{% endif %}>{{ a.nom }} ({{ a.commission_pct_defaut }} %)</option>
+            {% endfor %}
+        </select>
+        — <a href="/agences">gérer les agences</a>
     </label>
-    <label>Commission plateforme/agence (€) <input type="number" step="0.01" name="commission_plateforme" value="{{ booking_edit.commission_plateforme if booking_edit else 0 }}"></label>
+
+    <label>Montant brut — tout compris, hors taxe de séjour (€)
+        <input type="number" step="0.01" name="montant_brut" id="champ_brut" value="{{ booking_edit.montant_brut if booking_edit else '' }}" required>
+    </label>
+    <label>Commission agence/plateforme (€) <input type="number" step="0.01" name="commission_plateforme" id="champ_commission" value="{{ booking_edit.commission_plateforme if booking_edit else 0 }}"></label>
+    <label>Net encaissé — saisissable si c'est ce qu'indique la fiche agence (€)
+        <input type="number" step="0.01" id="champ_net" value="{{ booking_edit.net_encaisse if booking_edit else '' }}">
+    </label>
+
+    <label>Date de paiement — détermine le mois/année de la recette pour la compta (laisser vide si pas encore encaissé)
+        <input type="date" name="date_paiement" value="{{ booking_edit.date_paiement if booking_edit and booking_edit.date_paiement else '' }}">
+    </label>
+
     <label>Frais de ménage facturés — informatif, inclus dans le montant brut (€)
         <input type="number" step="0.01" name="frais_menage_factures" value="{{ booking_edit.frais_menage_factures if booking_edit else 0 }}">
     </label>
@@ -60,7 +79,7 @@
 <h2>Réservations {{ annee }}</h2>
 {% if bookings %}
 <table>
-    <thead><tr><th>Arrivée</th><th>Départ</th><th>Nuits</th><th>Plateforme</th><th>Montant brut</th><th>Net encaissé</th><th>Statut</th><th></th></tr></thead>
+    <thead><tr><th>Arrivée</th><th>Départ</th><th>Nuits</th><th>Plateforme</th><th>Agence</th><th>Montant brut</th><th>Net encaissé</th><th>Payé le</th><th>Statut</th><th></th></tr></thead>
     <tbody>
     {% for b in bookings %}
         <tr>
@@ -68,8 +87,10 @@
             <td>{{ b.date_depart }}</td>
             <td>{{ b.nuits }}</td>
             <td>{{ b.plateforme.value }}</td>
+            <td>{{ b.agency.nom if b.agency else "" }}</td>
             <td>{{ "%.2f"|format(b.montant_brut) }} €</td>
             <td>{{ "%.2f"|format(b.net_encaisse) }} €</td>
+            <td>{% if b.date_paiement %}{{ b.date_paiement }}{% else %}<span class="warning">⏳ en attente</span>{% endif %}</td>
             <td>{{ b.statut.value }}</td>
             <td>
                 <a href="/appartement/reservations/{{ b.id }}/modifier">Modifier</a>
@@ -93,13 +114,66 @@
         data: {
             labels: ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'],
             datasets: [{
-                label: 'Recettes mensuelles (€)',
+                label: 'Recettes encaissées (€)',
                 data: {{ recettes_par_mois | tojson }},
                 backgroundColor: '#2f5d50',
             }]
         },
         options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
+
+    // Calcul bidirectionnel brut <-> net, à partir du % de commission de
+    // l'agence sélectionnée (net = brut * (1 - pct/100)).
+    (function () {
+        const champAgence = document.getElementById('champ_agence');
+        const champBrut = document.getElementById('champ_brut');
+        const champCommission = document.getElementById('champ_commission');
+        const champNet = document.getElementById('champ_net');
+
+        function pctSelection() {
+            const option = champAgence.options[champAgence.selectedIndex];
+            const pct = option ? parseFloat(option.dataset.commissionPct) : NaN;
+            return isNaN(pct) ? null : pct;
+        }
+
+        function arrondi(x) { return Math.round(x * 100) / 100; }
+
+        function depuisBrut() {
+            const brut = parseFloat(champBrut.value);
+            if (isNaN(brut)) return;
+            const pct = pctSelection();
+            let commission;
+            if (pct !== null) {
+                commission = arrondi(brut * pct / 100);
+                champCommission.value = commission;
+            } else {
+                commission = parseFloat(champCommission.value) || 0;
+            }
+            champNet.value = arrondi(brut - commission);
+        }
+
+        function depuisNet() {
+            const net = parseFloat(champNet.value);
+            if (isNaN(net)) return;
+            const pct = pctSelection();
+            if (pct !== null) {
+                const brut = arrondi(net / (1 - pct / 100));
+                champBrut.value = brut;
+                champCommission.value = arrondi(brut - net);
+            } else {
+                const commission = parseFloat(champCommission.value) || 0;
+                champBrut.value = arrondi(net + commission);
+            }
+        }
+
+        champBrut.addEventListener('input', depuisBrut);
+        champCommission.addEventListener('input', depuisBrut);
+        champNet.addEventListener('input', depuisNet);
+        champAgence.addEventListener('change', function () {
+            if (champBrut.value) { depuisBrut(); }
+            else if (champNet.value) { depuisNet(); }
+        });
+    })();
 </script>
 {% endif %}
 {% endblock %}
