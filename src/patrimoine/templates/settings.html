@@ -27,4 +27,22 @@
         <button type="submit">Restaurer</button>
     </form>
 </section>
+
+<section>
+    <h2>IBKR (préparation)</h2>
+    <p>
+        Identifiants du Flex Web Service, stockés dans le Trousseau macOS (jamais en base ni dans le dépôt).
+        La récupération automatique des positions/opérations IBKR n'est pas encore implémentée — elle
+        nécessite un token et un Query ID réels pour être testée.
+    </p>
+    <p>
+        Token : {% if ibkr_token_configure %}configuré{% else %}non configuré{% endif %} —
+        Query ID : {% if ibkr_query_id_configure %}configuré{% else %}non configuré{% endif %}
+    </p>
+    <form method="post" action="/parametres/ibkr">
+        <label>Token Flex Web Service <input type="password" name="token" placeholder="laisser vide pour ne pas modifier"></label>
+        <label>Query ID <input type="password" name="query_id" placeholder="laisser vide pour ne pas modifier"></label>
+        <button type="submit">Enregistrer</button>
+    </form>
+</section>
 {% endblock %}

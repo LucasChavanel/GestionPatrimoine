@@ -83,6 +83,15 @@ class Foncier(BaseModel):
     reel: FoncierReelParams
 
 
+class Pea(BaseModel):
+    plafond_versements: float
+    anciennete_minimale_annees: int
+    allocation_europe_bande_min_pct: float
+    allocation_europe_bande_max_pct: float
+    source: str
+    verified: bool = False
+
+
 class FiscalParams(BaseModel):
     year: int
     meuble_tourisme: MeubleTourisme
@@ -90,6 +99,7 @@ class FiscalParams(BaseModel):
     prelevements_sociaux: PrelevementsSociaux
     categories_charges: dict[str, TraitementCategorieCharge] = {}
     cases_declaration: dict = {}
+    pea: Pea | None = None
 
     def _avertissement_prelevements_sociaux(self) -> list[str]:
         if self.prelevements_sociaux.verified:
@@ -128,11 +138,20 @@ class FiscalParams(BaseModel):
         warnings.extend(self._avertissement_prelevements_sociaux())
         return warnings
 
+    def unverified_warnings_pea(self) -> list[str]:
+        """Avertissements pertinents pour un compte PEA (plafond, bande d'allocation)."""
+        if self.pea is None or self.pea.verified:
+            return []
+        return [f"PEA {self.year} : paramètres non vérifiés ({self.pea.source})"]
+
     def unverified_warnings(self) -> list[str]:
         """Vue d'ensemble (dashboard) : tous les avertissements, toutes familles
         confondues — pas de notion de bien précis à ce niveau."""
         warnings = self.unverified_warnings_lmnp()
         for w in self.unverified_warnings_foncier():
+            if w not in warnings:
+                warnings.append(w)
+        for w in self.unverified_warnings_pea():
             if w not in warnings:
                 warnings.append(w)
         return warnings

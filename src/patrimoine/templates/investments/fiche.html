@@ -28,8 +28,49 @@
     </form>
 </section>
 
+{% if suivi_pea %}
+<section>
+    <h2>Suivi PEA</h2>
+    <p>
+        Versements cumulés : {{ "%.2f"|format(suivi_pea.versements_cumules) }} € / plafond {{ "%.0f"|format(suivi_pea.plafond) }} €
+        — marge disponible : {{ "%.2f"|format(suivi_pea.marge_disponible) }} €
+    </p>
+    {% if suivi_pea.marge_disponible < 0 %}
+    <p class="warning">⚠️ Plafond de versements dépassé.</p>
+    {% endif %}
+    {% if suivi_pea.anciennete_annees is not none %}
+    <p>
+        Ancienneté : {{ "%.1f"|format(suivi_pea.anciennete_annees) }} ans
+        {% if suivi_pea.anciennete_suffisante == false %}
+        <span class="warning">⚠️ moins de 5 ans — un retrait ferait perdre l'avantage fiscal du PEA.</span>
+        {% endif %}
+    </p>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if allocation %}
+<section>
+    <h2>Allocation World / Europe</h2>
+    <p>
+        World : {{ "%.2f"|format(allocation.valeur_world) }} € —
+        Europe : {{ "%.2f"|format(allocation.valeur_europe) }} €
+        {% if allocation.valeur_autre %}— Autre : {{ "%.2f"|format(allocation.valeur_autre) }} €{% endif %}
+    </p>
+    {% if allocation.pct_europe is not none %}
+    <p>Part Europe : {{ "%.1f"|format(allocation.pct_europe * 100) }} %</p>
+    {% if allocation.hors_bande %}
+    <p class="warning">⚠️ Allocation Europe hors de la bande cible (15–25 %) — rééquilibrage à envisager.</p>
+    {% endif %}
+    {% endif %}
+</section>
+{% endif %}
+
 <section>
     <h2>Positions</h2>
+    <form method="post" action="/investissements/{{ account.id }}/rafraichir-cours">
+        <button type="submit">Rafraîchir les cours (Yahoo Finance)</button>
+    </form>
     {% if positions %}
     <table>
         <thead><tr><th>Titre</th><th>ISIN</th><th>Quantité détenue</th><th>PRMP</th><th>Montant investi</th><th>Dernier cours</th></tr></thead>

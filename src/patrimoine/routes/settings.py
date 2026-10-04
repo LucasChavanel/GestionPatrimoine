@@ -16,6 +16,7 @@ from ..services.backup import (
     mark_backup_done,
     restore_encrypted_archive,
 )
+from ..services.ibkr_credentials import get_credentials, save_credentials
 
 router = APIRouter(prefix="/parametres")
 
@@ -23,14 +24,26 @@ router = APIRouter(prefix="/parametres")
 @router.get("")
 def parametres(request: Request, session: Session = Depends(get_session)):
     settings = session.get(AppSettings, 1)
+    ibkr = get_credentials()
     return templates.TemplateResponse(
         request,
         "settings.html",
         {
             "last_backup_at": settings.last_backup_at if settings else None,
             "erreur_restauration": None,
+            "ibkr_token_configure": bool(ibkr.token),
+            "ibkr_query_id_configure": bool(ibkr.query_id),
         },
     )
+
+
+@router.post("/ibkr")
+def enregistrer_ibkr(
+    token: str | None = Form(None),
+    query_id: str | None = Form(None),
+):
+    save_credentials(token or None, query_id or None)
+    return RedirectResponse(url="/parametres", status_code=303)
 
 
 @router.post("/export")
@@ -57,12 +70,15 @@ async def importer(
         restore_encrypted_archive(password, content)
     except RestoreError as exc:
         settings = session.get(AppSettings, 1)
+        ibkr = get_credentials()
         return templates.TemplateResponse(
             request,
             "settings.html",
             {
                 "last_backup_at": settings.last_backup_at if settings else None,
                 "erreur_restauration": str(exc),
+                "ibkr_token_configure": bool(ibkr.token),
+                "ibkr_query_id_configure": bool(ibkr.query_id),
             },
         )
 

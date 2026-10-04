@@ -63,3 +63,10 @@ categories_charges:
   cfe: { lmnp_reel: deductible, foncier_reel: non_applicable }
   autre: { lmnp_reel: a_qualifier, foncier_reel: a_qualifier }
 cases_declaration: {} # rempli en Phase 4, numéros vérifiés chaque année
+pea:
+  plafond_versements: 150000
+  anciennete_minimale_annees: 5
+  allocation_europe_bande_min_pct: 0.15
+  allocation_europe_bande_max_pct: 0.25
+  source: "Spec module investissements 2026-10-04 — à vérifier"
+  verified: false
