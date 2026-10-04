@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Titres — Patrimoine{% endblock %}
+{% block content %}
+<h1>Titres</h1>
+<p>Référentiel des titres (ISIN unique), partagé par tous les comptes d'investissement.</p>
+
+<h2>{% if security_edit %}Modifier le titre{% else %}Ajouter un titre{% endif %}</h2>
+<form method="post" action="{% if security_edit %}/titres/{{ security_edit.id }}{% else %}/titres{% endif %}">
+    <label>ISIN <input type="text" name="isin" value="{{ security_edit.isin if security_edit else '' }}" required></label>
+    <label>Nom <input type="text" name="nom" value="{{ security_edit.nom if security_edit else '' }}" required></label>
+    <label>Ticker Yahoo Finance <input type="text" name="ticker_yahoo" value="{{ security_edit.ticker_yahoo if security_edit and security_edit.ticker_yahoo else '' }}"></label>
+    <label>Catégorie d'allocation
+        <select name="categorie_allocation">
+            <option value="">—</option>
+            {% for c in categories %}
+            <option value="{{ c.value }}" {% if security_edit and security_edit.categorie_allocation == c %}selected{% endif %}>{{ c.value }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Dernier cours <input type="number" step="0.0001" name="dernier_cours" value="{{ security_edit.dernier_cours if security_edit and security_edit.dernier_cours else '' }}"></label>
+    <button type="submit">{% if security_edit %}Enregistrer{% else %}Ajouter{% endif %}</button>
+</form>
+
+<h2>Liste</h2>
+{% if securities %}
+<table>
+    <thead><tr><th>ISIN</th><th>Nom</th><th>Ticker</th><th>Allocation</th><th>Dernier cours</th><th></th></tr></thead>
+    <tbody>
+    {% for s in securities %}
+        <tr>
+            <td>{{ s.isin }}</td>
+            <td>{{ s.nom }}</td>
+            <td>{{ s.ticker_yahoo or "" }}</td>
+            <td>{{ s.categorie_allocation.value if s.categorie_allocation else "" }}</td>
+            <td>{% if s.dernier_cours %}{{ s.dernier_cours }} {{ s.dernier_cours_devise or "" }} ({{ s.dernier_cours_date }}){% endif %}</td>
+            <td>
+                <a href="/titres/{{ s.id }}/modifier">Modifier</a>
+                <form method="post" action="/titres/{{ s.id }}/supprimer" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucun titre renseigné.</p>
+{% endif %}
+{% endblock %}

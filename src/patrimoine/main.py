@@ -19,6 +19,7 @@ from .routes import (
     expenses,
     immobilisations,
     indivision,
+    securities,
     settings,
     simulator,
     synthese,
@@ -26,6 +27,8 @@ from .routes import (
 from .routes import (
     calendar as calendar_routes,
 )
+from .routes.investments import router_compte as investments_compte_router
+from .routes.investments import router_liste as investments_liste_router
 from .routes.property import router_fiche as property_fiche_router
 from .routes.property import router_liste as property_liste_router
 
@@ -49,6 +52,9 @@ def create_app() -> FastAPI:
     app.include_router(agencies.router)
     app.include_router(calendar_routes.router)
     app.include_router(synthese.router)
+    app.include_router(securities.router)
+    app.include_router(investments_liste_router)
+    app.include_router(investments_compte_router)
     return app
 
 

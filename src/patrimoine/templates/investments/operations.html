@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Opérations — {{ account.nom }} — Patrimoine{% endblock %}
+{% block content %}
+{% include "investments/_subnav.html" %}
+<h1>Opérations</h1>
+
+<h2>{% if transaction_edit %}Modifier l'opération{% else %}Ajouter une opération{% endif %}</h2>
+<form method="post" action="{% if transaction_edit %}/investissements/{{ account.id }}/operations/{{ transaction_edit.id }}{% else %}/investissements/{{ account.id }}/operations{% endif %}">
+    <label>Date <input type="date" name="date" value="{{ transaction_edit.date if transaction_edit else '' }}" required></label>
+    <label>Type
+        <select name="type_transaction">
+            {% for t in types_transaction %}
+            <option value="{{ t.value }}" {% if transaction_edit and transaction_edit.type == t %}selected{% endif %}>{{ t.value }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Titre
+        <select name="security_id">
+            <option value="">—</option>
+            {% for s in securities %}
+            <option value="{{ s.id }}" {% if transaction_edit and transaction_edit.security_id == s.id %}selected{% endif %}>{{ s.nom }} ({{ s.isin }})</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Quantité <input type="number" step="0.000001" name="quantite" value="{{ transaction_edit.quantite if transaction_edit and transaction_edit.quantite else '' }}"></label>
+    <label>Prix unitaire <input type="number" step="0.0001" name="prix_unitaire" value="{{ transaction_edit.prix_unitaire if transaction_edit and transaction_edit.prix_unitaire else '' }}"></label>
+    <label>Devise <input type="text" name="devise" value="{{ transaction_edit.devise if transaction_edit else account.devise_base }}"></label>
+    <label>Frais <input type="number" step="0.01" name="frais" value="{{ transaction_edit.frais if transaction_edit else 0 }}"></label>
+    <label>Montant <input type="number" step="0.01" name="montant" value="{{ transaction_edit.montant if transaction_edit else '' }}" required></label>
+    <label>Description <input type="text" name="description" value="{{ transaction_edit.description if transaction_edit and transaction_edit.description else '' }}"></label>
+    <button type="submit">{% if transaction_edit %}Enregistrer{% else %}Ajouter{% endif %}</button>
+</form>
+
+<h2>Liste</h2>
+{% if transactions %}
+<table>
+    <thead><tr><th>Date</th><th>Type</th><th>Titre</th><th>Quantité</th><th>Prix unitaire</th><th>Frais</th><th>Montant</th><th></th></tr></thead>
+    <tbody>
+    {% for t in transactions %}
+        <tr>
+            <td>{{ t.date }}</td>
+            <td>{{ t.type.value }}</td>
+            <td>{% for s in securities %}{% if s.id == t.security_id %}{{ s.nom }}{% endif %}{% endfor %}</td>
+            <td>{{ t.quantite or "" }}</td>
+            <td>{{ t.prix_unitaire or "" }}</td>
+            <td>{{ t.frais }}</td>
+            <td>{{ "%.2f"|format(t.montant) }} {{ t.devise }}</td>
+            <td>
+                <a href="/investissements/{{ account.id }}/operations/{{ t.id }}/modifier">Modifier</a>
+                <form method="post" action="/investissements/{{ account.id }}/operations/{{ t.id }}/supprimer" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune opération enregistrée.</p>
+{% endif %}
+{% endblock %}
