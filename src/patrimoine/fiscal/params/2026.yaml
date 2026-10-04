@@ -21,14 +21,29 @@ meuble_tourisme:
       mobilier: 7
     source: "durées d'usage indicatives — à valider avec l'expert-comptable"
     verified: false
+foncier:
+  micro_foncier:
+    abattement: 0.30
+    plafond_recettes: 15000
+    source: "Spec module locatif 2026-10-04 — à vérifier"
+    verified: false
+  reel:
+    frais_gestion_forfaitaire_par_lot: 20 # déductible même sans charge réelle correspondante
+    plafond_deficit_imputable_revenu_global: 10700
+    source: "Spec module locatif 2026-10-04 — à vérifier"
+    verified: false
 prelevements_sociaux:
   revenus_bic_lmnp: 0.172 # à vérifier selon nature du revenu
   revenus_capital_mobilier: 0.186
+  revenus_fonciers: 0.172 # à vérifier — distinct de revenus_bic_lmnp même si même valeur actuellement
   verified: false
 # Traitement de chaque catégorie de charge par régime : deductible / non_deductible /
-# immobilisation / immobilisation_si_seuil / a_qualifier. foncier_reel pas encore
-# consommé par le code (régime pas encore implémenté), gardé pour éviter une
-# re-migration plus tard. Source : Spec module locatif 2026-10-04 — à vérifier.
+# immobilisation / immobilisation_si_seuil / non_applicable / a_qualifier.
+# Limite assumée : travaux_amelioration regroupe amélioration ET agrandissement/
+# construction alors que la spec les distingue pour le foncier réel (amélioration
+# déductible, agrandissement non simplement déductible) — traité uniformément
+# comme déductible faute de cas d'usage réel, à affiner si besoin.
+# Source : Spec module locatif 2026-10-04 — à vérifier.
 categories_charges:
   copro_courantes: { lmnp_reel: deductible, foncier_reel: deductible }
   copro_regularisation: { lmnp_reel: deductible, foncier_reel: deductible }

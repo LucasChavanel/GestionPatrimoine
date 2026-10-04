@@ -5,7 +5,9 @@ from sqlmodel import Session
 
 from ..db import get_session
 from ..deps import get_property_or_404, templates
+from ..models.enums import TypeLocation
 from ..models.property import Property
+from ..services.foncier import simulate_foncier_year
 from ..services.simulator import simulate_year
 
 router = APIRouter(prefix="/biens/{property_id}/simulateur")
@@ -21,7 +23,14 @@ def simulateur(
     property_: Property = Depends(get_property_or_404),
 ):
     annee = annee or date.today().year
-    result = simulate_year(session, property_, annee, tmi=tmi_pct / 100)
+    tmi = tmi_pct / 100
+
+    if property_.type_location == TypeLocation.nu:
+        famille = "foncier"
+        result = simulate_foncier_year(session, property_, annee, tmi)
+    else:
+        famille = "lmnp"
+        result = simulate_year(session, property_, annee, tmi)
 
     return templates.TemplateResponse(
         request,
@@ -30,6 +39,7 @@ def simulateur(
             "property_": property_,
             "annee": annee,
             "tmi_pct": tmi_pct,
+            "famille": famille,
             "result": result,
         },
     )

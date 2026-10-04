@@ -51,27 +51,53 @@ class MeubleTourisme(BaseModel):
 class PrelevementsSociaux(BaseModel):
     revenus_bic_lmnp: float
     revenus_capital_mobilier: float
+    revenus_fonciers: float
     verified: bool = False
 
 
 class TraitementCategorieCharge(BaseModel):
     """Traitement d'une catégorie de charge par régime :
-    deductible / non_deductible / immobilisation / immobilisation_si_seuil / a_qualifier.
-    `foncier_reel` n'est pas encore consommé par le code (régime pas encore implémenté),
-    mais vit déjà dans ce fichier pour ne pas avoir à re-migrer plus tard."""
+    deductible / non_deductible / immobilisation / immobilisation_si_seuil /
+    non_applicable / a_qualifier."""
 
     lmnp_reel: str
     foncier_reel: str
 
 
+class MicroFoncierBareme(BaseModel):
+    abattement: float
+    plafond_recettes: float
+    source: str
+    verified: bool = False
+
+
+class FoncierReelParams(BaseModel):
+    frais_gestion_forfaitaire_par_lot: float
+    plafond_deficit_imputable_revenu_global: float
+    source: str
+    verified: bool = False
+
+
+class Foncier(BaseModel):
+    micro_foncier: MicroFoncierBareme
+    reel: FoncierReelParams
+
+
 class FiscalParams(BaseModel):
     year: int
     meuble_tourisme: MeubleTourisme
+    foncier: Foncier
     prelevements_sociaux: PrelevementsSociaux
     categories_charges: dict[str, TraitementCategorieCharge] = {}
     cases_declaration: dict = {}
 
-    def unverified_warnings(self) -> list[str]:
+    def _avertissement_prelevements_sociaux(self) -> list[str]:
+        if self.prelevements_sociaux.verified:
+            return []
+        return [f"Prélèvements sociaux {self.year} : taux non vérifiés"]
+
+    def unverified_warnings_lmnp(self) -> list[str]:
+        """Avertissements pertinents pour un bien meublé (micro-BIC/réel LMNP)."""
         warnings: list[str] = []
         mb = self.meuble_tourisme.micro_bic
         if not mb.non_classe.verified:
@@ -85,8 +111,30 @@ class FiscalParams(BaseModel):
         am = self.meuble_tourisme.amortissement
         if not am.verified:
             warnings.append(f"Amortissement {self.year} : durées/seuil non vérifiés ({am.source})")
-        if not self.prelevements_sociaux.verified:
-            warnings.append(f"Prélèvements sociaux {self.year} : taux non vérifiés")
+        warnings.extend(self._avertissement_prelevements_sociaux())
+        return warnings
+
+    def unverified_warnings_foncier(self) -> list[str]:
+        """Avertissements pertinents pour un bien nu (micro-foncier/réel)."""
+        warnings: list[str] = []
+        if not self.foncier.micro_foncier.verified:
+            warnings.append(
+                f"Micro-foncier {self.year} : paramètres non vérifiés ({self.foncier.micro_foncier.source})"
+            )
+        if not self.foncier.reel.verified:
+            warnings.append(
+                f"Foncier réel {self.year} : paramètres non vérifiés ({self.foncier.reel.source})"
+            )
+        warnings.extend(self._avertissement_prelevements_sociaux())
+        return warnings
+
+    def unverified_warnings(self) -> list[str]:
+        """Vue d'ensemble (dashboard) : tous les avertissements, toutes familles
+        confondues — pas de notion de bien précis à ce niveau."""
+        warnings = self.unverified_warnings_lmnp()
+        for w in self.unverified_warnings_foncier():
+            if w not in warnings:
+                warnings.append(w)
         return warnings
 
 

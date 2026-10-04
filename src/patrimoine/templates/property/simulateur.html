@@ -19,8 +19,9 @@
 </ul>
 {% endif %}
 
-<p>Recettes {{ annee }} : <strong>{{ "%.2f"|format(result.recettes) }} €</strong></p>
+<p>{{ "Loyers" if famille == "foncier" else "Recettes" }} {{ annee }} : <strong>{{ "%.2f"|format(result.recettes) }} €</strong></p>
 
+{% if famille == "lmnp" %}
 <table>
     <thead>
         <tr>
@@ -83,4 +84,60 @@
     <li>Cumul des amortissements pratiqués depuis le début (réintégrés dans la plus-value à la revente, réforme 2025) : {{ "%.2f"|format(result.reel.cumul_amortissements_pratiques) }} €</li>
 </ul>
 <p>Le régime réel implique une liasse fiscale, en général établie par un expert-comptable ou un service spécialisé ; ce coût est lui-même une charge déductible.</p>
+
+{% else %}
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th>Micro-foncier</th>
+            <th>Foncier réel</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Applicable</td>
+            <td>{{ "Oui" if result.micro_foncier.applicable else "Non (plafond dépassé)" }}</td>
+            <td>Oui</td>
+        </tr>
+        <tr>
+            <td>Abattement / charges déductibles (hors intérêts)</td>
+            <td>{{ (result.micro_foncier.abattement_pct * 100)|round(0) }} %</td>
+            <td>{{ "%.2f"|format(result.reel.charges_deductibles_hors_interets) }} €</td>
+        </tr>
+        <tr>
+            <td>Intérêts d'emprunt déduits</td>
+            <td>—</td>
+            <td>{{ "%.2f"|format(result.reel.interets_emprunt) }} €</td>
+        </tr>
+        <tr>
+            <td>Revenu / résultat imposable estimé</td>
+            <td>{{ "%.2f"|format(result.micro_foncier.revenu_imposable) }} €</td>
+            <td>{{ "%.2f"|format(result.reel.resultat_imposable) }} €</td>
+        </tr>
+        <tr>
+            <td>Impôt estimé (TMI {{ tmi_pct }} %)</td>
+            <td>{{ "%.2f"|format(result.micro_foncier.impot_estime) }} €</td>
+            <td>{{ "%.2f"|format(result.reel.impot_estime) }} €</td>
+        </tr>
+        <tr>
+            <td>Prélèvements sociaux estimés</td>
+            <td>{{ "%.2f"|format(result.micro_foncier.prelevements_sociaux_estimes) }} €</td>
+            <td>{{ "%.2f"|format(result.reel.prelevements_sociaux_estimes) }} €</td>
+        </tr>
+        <tr>
+            <td><strong>Total estimé</strong></td>
+            <td><strong>{{ "%.2f"|format(result.micro_foncier.total_estime) }} €</strong></td>
+            <td><strong>{{ "%.2f"|format(result.reel.total_estime) }} €</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Détail foncier réel</h2>
+<ul>
+    <li>Déficit imputable sur le revenu global cette année (hors de ce calcul foncier) : {{ "%.2f"|format(result.reel.deficit_imputable_revenu_global) }} €</li>
+    <li>Déficit restant reportable sur les revenus fonciers (10 ans max) : {{ "%.2f"|format(result.reel.deficit_restant_report_fonciers) }} €</li>
+</ul>
+<p>Le déficit imputable sur le revenu global ne concerne jamais la part liée aux intérêts d'emprunt — celle-ci n'est reportable que sur de futurs revenus fonciers.</p>
+{% endif %}
 {% endblock %}
