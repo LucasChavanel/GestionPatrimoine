@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Indivision — Patrimoine{% endblock %}
+{% block content %}
+<h1>Indivision</h1>
+<p>Biens gérés par un tiers qui transmet les chiffres chaque année. Pas de gestion détaillée : montants saisis tels que transmis.</p>
+
+<h2>{% if year_edit %}Modifier{% else %}Ajouter{% endif %} une année</h2>
+<form method="post" action="{% if year_edit %}/indivision/{{ year_edit.id }}{% else %}/indivision{% endif %}">
+    <label>Année <input type="number" name="annee" value="{{ year_edit.annee if year_edit else '' }}" required></label>
+    <label>Libellé (bien / ensemble) <input type="text" name="libelle" value="{{ year_edit.libelle if year_edit else '' }}" required></label>
+    <label>Quote-part (%) <input type="number" step="0.01" name="quote_part_pct" value="{{ year_edit.quote_part_pct if year_edit else '' }}" required></label>
+    <label>Revenus bruts (€) <input type="number" step="0.01" name="revenus_bruts" value="{{ year_edit.revenus_bruts if year_edit else '' }}" required></label>
+    <label>Charges (€) <input type="number" step="0.01" name="charges" value="{{ year_edit.charges if year_edit else '' }}" required></label>
+    <label><input type="checkbox" name="montants_proratises" value="1" {% if year_edit and year_edit.montants_proratises %}checked{% endif %}> Montants déjà proratisés à ma quote-part</label>
+    <label>Régime déclaré <input type="text" name="regime_declare" value="{{ year_edit.regime_declare if year_edit and year_edit.regime_declare else '' }}"></label>
+    <label>Montants à reporter (saisis tels que transmis) <input type="text" name="montants_a_reporter" value="{{ year_edit.montants_a_reporter if year_edit and year_edit.montants_a_reporter else '' }}"></label>
+    <button type="submit">{% if year_edit %}Enregistrer{% else %}Ajouter{% endif %}</button>
+</form>
+
+<h2>Récapitulatif</h2>
+{% if years %}
+<table>
+    <thead><tr><th>Année</th><th>Libellé</th><th>Quote-part</th><th>Revenus bruts</th><th>Charges</th><th>Proratisé</th><th>Pièce jointe</th><th></th></tr></thead>
+    <tbody>
+    {% for y in years %}
+        <tr>
+            <td>{{ y.annee }}</td>
+            <td>{{ y.libelle }}</td>
+            <td>{{ y.quote_part_pct }} %</td>
+            <td>{{ "%.2f"|format(y.revenus_bruts) }} €</td>
+            <td>{{ "%.2f"|format(y.charges) }} €</td>
+            <td>{{ "Oui" if y.montants_proratises else "Non" }}</td>
+            <td>
+                {% set entity_type = "coownership_year" %}
+                {% set entity_id = y.id %}
+                {% set attachments = attachments_by_year.get(y.id, []) %}
+                {% include "_attachments.html" %}
+            </td>
+            <td>
+                <a href="/indivision/{{ y.id }}/modifier">Modifier</a>
+                <form method="post" action="/indivision/{{ y.id }}/supprimer" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune année renseignée.</p>
+{% endif %}
+{% endblock %}

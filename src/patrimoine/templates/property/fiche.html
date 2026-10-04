@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Appartement — Patrimoine{% endblock %}
+{% block content %}
+{% include "property/_subnav.html" %}
+<h1>Appartement</h1>
+
+{% if property_ and not property_.numero_declaration_mairie %}
+<p class="warning">⚠️ Numéro de déclaration en mairie non renseigné.</p>
+{% endif %}
+
+<section>
+    <h2>Informations générales</h2>
+    <form method="post" action="/appartement">
+        <label>Nom <input type="text" name="nom" value="{{ property_.nom if property_ else '' }}" required></label>
+        <label>Adresse <input type="text" name="adresse" value="{{ property_.adresse if property_ else '' }}" required></label>
+        <label>Surface (m²) <input type="number" step="0.01" name="surface" value="{{ property_.surface if property_ else '' }}" required></label>
+        <label>Date d'acquisition <input type="date" name="date_acquisition" value="{{ property_.date_acquisition if property_ else '' }}" required></label>
+        <label>Prix d'acquisition (€) <input type="number" step="0.01" name="prix_acquisition" value="{{ property_.prix_acquisition if property_ else '' }}" required></label>
+        <label>Frais de notaire (€) <input type="number" step="0.01" name="frais_notaire" value="{{ property_.frais_notaire if property_ else 0 }}"></label>
+        <label>Part du terrain (%, non amortissable) <input type="number" step="0.01" name="part_terrain_pct" value="{{ property_.part_terrain_pct if property_ else 0 }}"></label>
+
+        <label>Statut de classement
+            <select name="statut_classement">
+                <option value="non_classe" {% if property_ and property_.statut_classement.value == 'non_classe' %}selected{% endif %}>Non classé</option>
+                <option value="classe" {% if property_ and property_.statut_classement.value == 'classe' %}selected{% endif %}>Classé</option>
+            </select>
+        </label>
+        <label>Nombre d'étoiles <input type="number" name="nb_etoiles" value="{{ property_.nb_etoiles if property_ and property_.nb_etoiles else '' }}"></label>
+        <label>Date de classement <input type="date" name="date_classement" value="{{ property_.date_classement if property_ and property_.date_classement else '' }}"></label>
+        <label>N° déclaration mairie <input type="text" name="numero_declaration_mairie" value="{{ property_.numero_declaration_mairie if property_ and property_.numero_declaration_mairie else '' }}"></label>
+        <label>Date de première mise en location <input type="date" name="date_premiere_mise_en_location" value="{{ property_.date_premiere_mise_en_location if property_ and property_.date_premiere_mise_en_location else '' }}"></label>
+
+        <button type="submit">Enregistrer</button>
+    </form>
+</section>
+
+{% if property_ %}
+<section>
+    <h2>Base amortissable du bâti</h2>
+    <p>{{ "%.2f"|format(property_.base_amortissable) }} € (prix + frais de notaire, hors part du terrain)</p>
+
+    <h3>Composants (gros œuvre, façade, installations, agencements)</h3>
+    {% if property_.building_components %}
+    <table>
+        <thead><tr><th>Nature</th><th>Part du prix</th><th>Durée</th><th></th></tr></thead>
+        <tbody>
+        {% for c in property_.building_components %}
+            <tr>
+                <td>{{ c.nature.value }}</td>
+                <td>{{ c.part_du_prix_pct }} %</td>
+                <td>{{ c.duree_amortissement }} ans</td>
+                <td>
+                    <form method="post" action="/appartement/composants/{{ c.id }}/supprimer" style="display:inline">
+                        <button type="submit">Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% set somme_parts = property_.building_components | sum(attribute="part_du_prix_pct") %}
+    {% if somme_parts != 100 %}
+    <p class="warning">⚠️ La somme des parts des composants est de {{ somme_parts }} %, pas 100 %.</p>
+    {% endif %}
+    {% else %}
+    <p>Aucun composant renseigné.</p>
+    {% endif %}
+
+    <form method="post" action="/appartement/composants">
+        <label>Nature
+            <select name="nature">
+                {% for n in natures_composant %}
+                <option value="{{ n.value }}">{{ n.value }} (défaut {{ durees_defaut[n.value] }} ans)</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Part du prix (%) <input type="number" step="0.01" name="part_du_prix_pct" required></label>
+        <label>Durée (ans) <input type="number" name="duree_amortissement" required></label>
+        <button type="submit">Ajouter le composant</button>
+    </form>
+</section>
+{% endif %}
+{% endblock %}

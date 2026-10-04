@@ -1,0 +1,18 @@
+{# Attend dans le contexte : entity_type (str), entity_id (int), attachments (list[Attachment]), redirect_to (str) #}
+<span class="attachments">
+    {% for a in attachments %}
+        <a href="/pieces-jointes/{{ a.id }}/telecharger">{{ a.original_filename }}</a>
+        <form method="post" action="/pieces-jointes/{{ a.id }}/supprimer" style="display:inline">
+            <input type="hidden" name="redirect_to" value="{{ redirect_to }}">
+            <button type="submit" title="Supprimer la pièce jointe">×</button>
+        </form>
+        <br>
+    {% endfor %}
+    <form method="post" action="/pieces-jointes/upload" enctype="multipart/form-data" style="display:inline-flex; gap:0.25rem; align-items:center">
+        <input type="hidden" name="entity_type" value="{{ entity_type }}">
+        <input type="hidden" name="entity_id" value="{{ entity_id }}">
+        <input type="hidden" name="redirect_to" value="{{ redirect_to }}">
+        <input type="file" name="file" required>
+        <button type="submit">Joindre</button>
+    </form>
+</span>

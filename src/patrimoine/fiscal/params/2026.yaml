@@ -1,0 +1,28 @@
+year: 2026
+meuble_tourisme:
+  micro_bic:
+    non_classe:
+      abattement: 0.30
+      plafond_recettes: 15000
+      source: "LF 2025 / loi Le Meur — à vérifier"
+      verified: false
+    classe:
+      abattement: 0.50
+      plafond_recettes: 83600
+      source: "à vérifier"
+      verified: false
+  amortissement:
+    seuil_charge_directe_mobilier: 600 # HT, usage courant — à vérifier
+    durees_defaut:
+      gros_oeuvre: 50
+      facade_etancheite: 25
+      installations_techniques: 20
+      agencements: 15
+      mobilier: 7
+    source: "durées d'usage indicatives — à valider avec l'expert-comptable"
+    verified: false
+prelevements_sociaux:
+  revenus_bic_lmnp: 0.172 # à vérifier selon nature du revenu
+  revenus_capital_mobilier: 0.186
+  verified: false
+cases_declaration: {} # rempli en Phase 4, numéros vérifiés chaque année

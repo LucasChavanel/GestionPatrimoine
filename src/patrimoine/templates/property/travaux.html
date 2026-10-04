@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Travaux & mobilier — Patrimoine{% endblock %}
+{% block content %}
+{% include "property/_subnav.html" %}
+<h1>Travaux &amp; mobilier</h1>
+
+{% if not property_ %}
+<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
+{% else %}
+
+<form method="get" action="/appartement/travaux">
+    <label>Année (pour le tableau d'amortissement prévisionnel)
+        <input type="number" name="annee" value="{{ annee }}" onchange="this.form.submit()">
+    </label>
+</form>
+
+<h2>Travaux</h2>
+<form method="post" action="/appartement/travaux/works">
+    <label>Date <input type="date" name="date" required></label>
+    <label>Montant TTC (€) <input type="number" step="0.01" name="montant_ttc" required></label>
+    <label>Fournisseur / artisan <input type="text" name="fournisseur"></label>
+    <label>Description <input type="text" name="description"></label>
+    <label>Nature
+        <select name="nature">
+            {% for n in natures_works %}
+            <option value="{{ n.value }}">{{ n.value }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Durée d'amortissement (ans, si amortissable — suggestion : {{ duree_suggeree_agencements }})
+        <input type="number" name="duree_amortissement">
+    </label>
+    <label><input type="checkbox" name="avant_premiere_mise_en_location" value="1"> Avant première mise en location</label>
+    <button type="submit">Ajouter le travaux</button>
+</form>
+
+{% if works_rows %}
+<table>
+    <thead><tr><th>Date</th><th>Nature</th><th>Montant TTC</th><th>Avant activité</th><th>Dotation {{ annee }}</th><th>Pièce jointe</th><th></th></tr></thead>
+    <tbody>
+    {% for row in works_rows %}
+        {% set w = row.item %}
+        <tr>
+            <td>{{ w.date }}</td>
+            <td>{{ w.nature.value }}</td>
+            <td>{{ "%.2f"|format(w.montant_ttc) }} €</td>
+            <td>{{ "Oui" if w.avant_premiere_mise_en_location else "Non" }}</td>
+            <td>
+                {% if w.avant_premiere_mise_en_location and w.est_amortissable %}
+                    intégré à la base du bâti
+                {% elif not w.est_amortissable %}
+                    charge directe (non amortissable)
+                {% else %}
+                    {{ "%.2f"|format(row.dotation_annee) }} €
+                {% endif %}
+            </td>
+            <td>
+                {% if not row.attachments %}<span class="warning">⚠️ absente</span>{% endif %}
+                {% set entity_type = "works" %}
+                {% set entity_id = w.id %}
+                {% set attachments = row.attachments %}
+                {% include "_attachments.html" %}
+            </td>
+            <td>
+                <form method="post" action="/appartement/travaux/works/{{ w.id }}/supprimer" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucun travaux renseigné.</p>
+{% endif %}
+
+<h2>Mobilier et équipement</h2>
+<form method="post" action="/appartement/travaux/furniture">
+    <label>Date d'achat <input type="date" name="date_achat" required></label>
+    <label>Montant TTC (€) <input type="number" step="0.01" name="montant_ttc" required></label>
+    <label>Description <input type="text" name="description"></label>
+    <label>Durée d'amortissement (ans) <input type="number" name="duree_amortissement" value="{{ duree_suggeree_mobilier }}" required></label>
+    <button type="submit">Ajouter le mobilier</button>
+</form>
+
+{% if furniture_rows %}
+<table>
+    <thead><tr><th>Date d'achat</th><th>Description</th><th>Montant TTC</th><th>Traitement</th><th>Dotation {{ annee }}</th><th>Pièce jointe</th><th></th></tr></thead>
+    <tbody>
+    {% for row in furniture_rows %}
+        {% set f = row.item %}
+        <tr>
+            <td>{{ f.date_achat }}</td>
+            <td>{{ f.description or "" }}</td>
+            <td>{{ "%.2f"|format(f.montant_ttc) }} €</td>
+            <td>{{ "Charge directe (sous le seuil)" if row.charge_directe else "Amorti sur " + f.duree_amortissement|string + " ans" }}</td>
+            <td>{{ "%.2f"|format(row.dotation_annee) }} €</td>
+            <td>
+                {% set entity_type = "furniture" %}
+                {% set entity_id = f.id %}
+                {% set attachments = row.attachments %}
+                {% include "_attachments.html" %}
+            </td>
+            <td>
+                <form method="post" action="/appartement/travaux/furniture/{{ f.id }}/supprimer" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucun mobilier renseigné.</p>
+{% endif %}
+
+{% endif %}
+{% endblock %}

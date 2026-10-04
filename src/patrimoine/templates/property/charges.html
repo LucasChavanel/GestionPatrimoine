@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Charges — Patrimoine{% endblock %}
+{% block content %}
+{% include "property/_subnav.html" %}
+<h1>Charges</h1>
+
+{% if not property_ %}
+<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
+{% else %}
+
+<form method="get" action="/appartement/charges">
+    <label>Année
+        <select name="annee" onchange="this.form.submit()">
+            {% for a in annees_disponibles %}
+            <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+        </select>
+    </label>
+</form>
+
+<canvas id="chart-charges" height="100"></canvas>
+<p><strong>Total {{ annee }} : {{ "%.2f"|format(total_annee) }} €</strong></p>
+
+<h2>{% if expense_edit %}Modifier la charge{% else %}Ajouter une charge{% endif %}</h2>
+<form method="post" action="{% if expense_edit %}/appartement/charges/{{ expense_edit.id }}{% else %}/appartement/charges{% endif %}">
+    <label>Date <input type="date" name="date" value="{{ expense_edit.date if expense_edit else '' }}" required></label>
+    <label>Montant TTC (€) <input type="number" step="0.01" name="montant_ttc" value="{{ expense_edit.montant_ttc if expense_edit else '' }}" required></label>
+    <label>Fournisseur <input type="text" name="fournisseur" value="{{ expense_edit.fournisseur if expense_edit and expense_edit.fournisseur else '' }}"></label>
+    <label>Description <input type="text" name="description" value="{{ expense_edit.description if expense_edit and expense_edit.description else '' }}"></label>
+    <label>Catégorie
+        <select name="categorie">
+            {% for c in categories %}
+            <option value="{{ c.value }}" {% if expense_edit and expense_edit.categorie == c %}selected{% endif %}>{{ c.value }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Récurrence
+        <select name="recurrence">
+            {% for r in recurrences %}
+            <option value="{{ r.value }}" {% if expense_edit and expense_edit.recurrence == r %}selected{% endif %}>{{ r.value }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="submit">{% if expense_edit %}Enregistrer les modifications{% else %}Ajouter{% endif %}</button>
+</form>
+
+<h2>Charges {{ annee }}</h2>
+{% if expenses %}
+<table>
+    <thead><tr><th>Date</th><th>Catégorie</th><th>Montant TTC</th><th>Fournisseur</th><th>Pièces jointes</th><th>Récurrence</th><th></th></tr></thead>
+    <tbody>
+    {% for e in expenses %}
+        <tr>
+            <td>{{ e.date }}</td>
+            <td>{{ e.categorie.value }}</td>
+            <td>{{ "%.2f"|format(e.montant_ttc) }} €</td>
+            <td>{{ e.fournisseur or "" }}</td>
+            <td>
+                {% set entity_type = "expense" %}
+                {% set entity_id = e.id %}
+                {% set attachments = attachments_by_expense.get(e.id, []) %}
+                {% include "_attachments.html" %}
+            </td>
+            <td>
+                {{ e.recurrence.value }}
+                {% if e.recurrence.value != 'aucune' %}
+                <form method="post" action="/appartement/charges/{{ e.id }}/generer" style="display:inline-flex; gap:0.25rem; align-items:center">
+                    <input type="date" name="jusqu_au" required>
+                    <button type="submit" title="Générer les occurrences jusqu'à cette date">Générer</button>
+                </form>
+                {% endif %}
+            </td>
+            <td>
+                <a href="/appartement/charges/{{ e.id }}/modifier">Modifier</a>
+                <form method="post" action="/appartement/charges/{{ e.id }}/supprimer" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune charge pour {{ annee }}.</p>
+{% endif %}
+
+<script src="/static/js/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('chart-charges');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: {{ totaux_categorie.keys() | list | tojson }},
+            datasets: [{
+                data: {{ totaux_categorie.values() | list | tojson }},
+                backgroundColor: ['#2f5d50','#8a5a00','#4a6b8a','#a33f3f','#6b4a8a','#3f8a6b','#8a6b3f','#555','#2f8d9a','#9a2f6a','#6a9a2f','#9a6a2f'],
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
+{% endif %}
+{% endblock %}

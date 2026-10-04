@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Patrimoine{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p class="disclaimer">Outil local — données hors du repo, aucune synchronisation cloud.</p>
+
+{% if avertissements %}
+<ul class="warning">
+    {% for a in avertissements %}
+    <li>⚠️ {{ a }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+<section class="summary-cards">
+    <div class="card">
+        <h2>Recettes {{ annee }}</h2>
+        <p class="amount">{{ "%.2f"|format(recettes_annee) }} €</p>
+    </div>
+    <div class="card">
+        <h2>Charges {{ annee }}</h2>
+        <p class="amount">{{ "%.2f"|format(charges_annee) }} €</p>
+    </div>
+    <div class="card">
+        <h2>Résultat {{ annee }}</h2>
+        <p class="amount">{{ "%.2f"|format(resultat_annee) }} €</p>
+    </div>
+</section>
+
+<section>
+    <h2>Prochaines réservations</h2>
+    {% if prochaines_reservations %}
+    <table>
+        <thead><tr><th>Arrivée</th><th>Départ</th><th>Plateforme</th><th>Net encaissé</th></tr></thead>
+        <tbody>
+        {% for b in prochaines_reservations %}
+            <tr>
+                <td>{{ b.date_arrivee }}</td>
+                <td>{{ b.date_depart }}</td>
+                <td>{{ b.plateforme.value }}</td>
+                <td>{{ "%.2f"|format(b.net_encaisse) }} €</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Aucune réservation à venir.</p>
+    {% endif %}
+</section>
+
+<section>
+    <h2>Sauvegarde</h2>
+    <p>
+        Dernière sauvegarde :
+        {% if last_backup_at %}{{ last_backup_at }}{% else %}jamais effectuée{% endif %}
+    </p>
+</section>
+{% endblock %}

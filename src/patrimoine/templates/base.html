@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Patrimoine{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <script src="/static/js/htmx.min.js" defer></script>
+</head>
+<body>
+    <nav class="main-nav">
+        <a href="/">Dashboard</a>
+        <a href="/appartement">Appartement</a>
+        <a href="/indivision">Indivision</a>
+        <a href="/parametres">Paramètres</a>
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Réservations — Patrimoine{% endblock %}
+{% block content %}
+{% include "property/_subnav.html" %}
+<h1>Réservations</h1>
+
+{% if not property_ %}
+<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
+{% else %}
+
+<form method="get" action="/appartement/reservations">
+    <label>Année
+        <select name="annee" onchange="this.form.submit()">
+            {% for a in annees_disponibles %}
+            <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+        </select>
+    </label>
+</form>
+
+<canvas id="chart-recettes" height="100"></canvas>
+
+<h2>{% if booking_edit %}Modifier la réservation{% else %}Ajouter une réservation{% endif %}</h2>
+<form method="post" action="{% if booking_edit %}/appartement/reservations/{{ booking_edit.id }}{% else %}/appartement/reservations{% endif %}">
+    <label>Date d'arrivée <input type="date" name="date_arrivee" value="{{ booking_edit.date_arrivee if booking_edit else '' }}" required></label>
+    <label>Date de départ <input type="date" name="date_depart" value="{{ booking_edit.date_depart if booking_edit else '' }}" required></label>
+    <label>Plateforme
+        <select name="plateforme">
+            {% for p in plateformes %}
+            <option value="{{ p.value }}" {% if booking_edit and booking_edit.plateforme == p %}selected{% endif %}>{{ p.value }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Montant brut — tout compris, hors taxe de séjour (€)
+        <input type="number" step="0.01" name="montant_brut" value="{{ booking_edit.montant_brut if booking_edit else '' }}" required>
+    </label>
+    <label>Commission plateforme/agence (€) <input type="number" step="0.01" name="commission_plateforme" value="{{ booking_edit.commission_plateforme if booking_edit else 0 }}"></label>
+    <label>Frais de ménage facturés — informatif, inclus dans le montant brut (€)
+        <input type="number" step="0.01" name="frais_menage_factures" value="{{ booking_edit.frais_menage_factures if booking_edit else 0 }}">
+    </label>
+    <label>Taxe de séjour collectée — informatif (€) <input type="number" step="0.01" name="taxe_sejour_collectee" value="{{ booking_edit.taxe_sejour_collectee if booking_edit else 0 }}"></label>
+    <label>Taxe de séjour reversée par
+        <select name="taxe_sejour_reversee_par">
+            <option value="">—</option>
+            {% for r in reversements %}
+            <option value="{{ r.value }}" {% if booking_edit and booking_edit.taxe_sejour_reversee_par == r %}selected{% endif %}>{{ r.value }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Statut
+        <select name="statut">
+            <option value="confirmee" {% if booking_edit and booking_edit.statut.value == 'confirmee' %}selected{% endif %}>Confirmée</option>
+            <option value="annulee" {% if booking_edit and booking_edit.statut.value == 'annulee' %}selected{% endif %}>Annulée</option>
+        </select>
+    </label>
+    <label>Notes <input type="text" name="notes" value="{{ booking_edit.notes if booking_edit and booking_edit.notes else '' }}"></label>
+    <button type="submit">{% if booking_edit %}Enregistrer les modifications{% else %}Ajouter{% endif %}</button>
+</form>
+
+<h2>Réservations {{ annee }}</h2>
+{% if bookings %}
+<table>
+    <thead><tr><th>Arrivée</th><th>Départ</th><th>Nuits</th><th>Plateforme</th><th>Montant brut</th><th>Net encaissé</th><th>Statut</th><th></th></tr></thead>
+    <tbody>
+    {% for b in bookings %}
+        <tr>
+            <td>{{ b.date_arrivee }}</td>
+            <td>{{ b.date_depart }}</td>
+            <td>{{ b.nuits }}</td>
+            <td>{{ b.plateforme.value }}</td>
+            <td>{{ "%.2f"|format(b.montant_brut) }} €</td>
+            <td>{{ "%.2f"|format(b.net_encaisse) }} €</td>
+            <td>{{ b.statut.value }}</td>
+            <td>
+                <a href="/appartement/reservations/{{ b.id }}/modifier">Modifier</a>
+                <form method="post" action="/appartement/reservations/{{ b.id }}/supprimer" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune réservation pour {{ annee }}.</p>
+{% endif %}
+
+<script src="/static/js/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('chart-recettes');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'],
+            datasets: [{
+                label: 'Recettes mensuelles (€)',
+                data: {{ recettes_par_mois | tojson }},
+                backgroundColor: '#2f5d50',
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+</script>
+{% endif %}
+{% endblock %}

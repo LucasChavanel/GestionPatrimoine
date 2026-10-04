@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Simulateur fiscal — Patrimoine{% endblock %}
+{% block content %}
+{% include "property/_subnav.html" %}
+<h1>Simulateur fiscal</h1>
+<p class="disclaimer">⚠️ Estimation indicative — à valider avec un professionnel.</p>
+
+{% if not property_ %}
+<p>Créez d'abord <a href="/appartement">la fiche du bien</a>.</p>
+{% else %}
+
+<form method="get" action="/appartement/simulateur">
+    <label>Année <input type="number" name="annee" value="{{ annee }}"></label>
+    <label>TMI (%) <input type="number" step="0.1" name="tmi_pct" value="{{ tmi_pct }}"></label>
+    <button type="submit">Simuler</button>
+</form>
+
+{% if result %}
+
+{% if result.avertissements %}
+<ul class="warning">
+    {% for a in result.avertissements %}
+    <li>⚠️ {{ a }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<p>Recettes {{ annee }} : <strong>{{ "%.2f"|format(result.recettes) }} €</strong></p>
+
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th>Micro-BIC non classé</th>
+            <th>Micro-BIC classé</th>
+            <th>Réel simplifié</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Applicable</td>
+            <td>{{ "Oui" if result.micro_non_classe.applicable else "Non (plafond dépassé)" }}</td>
+            <td>{{ "Oui" if result.micro_classe.applicable else "Non (plafond dépassé)" }}</td>
+            <td>Oui</td>
+        </tr>
+        <tr>
+            <td>Abattement / charges déductibles</td>
+            <td>{{ (result.micro_non_classe.abattement_pct * 100)|round(0) }} %</td>
+            <td>{{ (result.micro_classe.abattement_pct * 100)|round(0) }} %</td>
+            <td>{{ "%.2f"|format(result.reel.charges_deductibles) }} €</td>
+        </tr>
+        <tr>
+            <td>Amortissements déduits</td>
+            <td>—</td>
+            <td>—</td>
+            <td>{{ "%.2f"|format(result.reel.amortissements_deduits_annee) }} €</td>
+        </tr>
+        <tr>
+            <td>Revenu / résultat imposable estimé</td>
+            <td>{{ "%.2f"|format(result.micro_non_classe.revenu_imposable) }} €</td>
+            <td>{{ "%.2f"|format(result.micro_classe.revenu_imposable) }} €</td>
+            <td>{{ "%.2f"|format(result.reel.resultat_imposable) }} €</td>
+        </tr>
+        <tr>
+            <td>Impôt estimé (TMI {{ tmi_pct }} %)</td>
+            <td>{{ "%.2f"|format(result.micro_non_classe.impot_estime) }} €</td>
+            <td>{{ "%.2f"|format(result.micro_classe.impot_estime) }} €</td>
+            <td>{{ "%.2f"|format(result.reel.impot_estime) }} €</td>
+        </tr>
+        <tr>
+            <td>Prélèvements sociaux estimés</td>
+            <td>{{ "%.2f"|format(result.micro_non_classe.prelevements_sociaux_estimes) }} €</td>
+            <td>{{ "%.2f"|format(result.micro_classe.prelevements_sociaux_estimes) }} €</td>
+            <td>{{ "%.2f"|format(result.reel.prelevements_sociaux_estimes) }} €</td>
+        </tr>
+        <tr>
+            <td><strong>Total estimé</strong></td>
+            <td><strong>{{ "%.2f"|format(result.micro_non_classe.total_estime) }} €</strong></td>
+            <td><strong>{{ "%.2f"|format(result.micro_classe.total_estime) }} €</strong></td>
+            <td><strong>{{ "%.2f"|format(result.reel.total_estime) }} €</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Détail réel simplifié</h2>
+<ul>
+    <li>Déficit restant reportable (10 ans max) : {{ "%.2f"|format(result.reel.deficit_restant_report) }} €</li>
+    <li>Amortissements non déduits reportables (sans limite de durée) : {{ "%.2f"|format(result.reel.amortissements_non_deduits_report) }} €</li>
+    <li>Cumul des amortissements pratiqués depuis le début (réintégrés dans la plus-value à la revente, réforme 2025) : {{ "%.2f"|format(result.reel.cumul_amortissements_pratiques) }} €</li>
+</ul>
+<p>Le régime réel implique une liasse fiscale, en général établie par un expert-comptable ou un service spécialisé ; ce coût est lui-même une charge déductible.</p>
+
+{% endif %}
+{% endif %}
+{% endblock %}

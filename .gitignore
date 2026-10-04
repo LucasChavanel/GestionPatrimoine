@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Données utilisateur — ne doivent jamais être versionnées
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+/data/
+/documents/
+
+.DS_Store

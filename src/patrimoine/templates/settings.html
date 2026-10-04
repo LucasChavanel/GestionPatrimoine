@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Paramètres — Patrimoine{% endblock %}
+{% block content %}
+<h1>Paramètres</h1>
+
+<section>
+    <h2>Sauvegarde</h2>
+    <p>
+        Dernière sauvegarde :
+        {% if last_backup_at %}{{ last_backup_at }}{% else %}jamais effectuée{% endif %}
+    </p>
+
+    <h3>Exporter une sauvegarde chiffrée</h3>
+    <form method="post" action="/parametres/export">
+        <label>Mot de passe <input type="password" name="password" required></label>
+        <button type="submit">Télécharger la sauvegarde (.zip chiffré AES-256)</button>
+    </form>
+
+    <h3>Restaurer depuis une sauvegarde</h3>
+    <p class="warning">⚠️ Opération destructive : remplace la base et les documents actuels (les anciens sont renommés, pas supprimés).</p>
+    {% if erreur_restauration %}
+    <p class="warning">⚠️ {{ erreur_restauration }}</p>
+    {% endif %}
+    <form method="post" action="/parametres/import" enctype="multipart/form-data">
+        <label>Archive (.zip) <input type="file" name="archive" accept=".zip" required></label>
+        <label>Mot de passe <input type="password" name="password" required></label>
+        <button type="submit">Restaurer</button>
+    </form>
+</section>
+{% endblock %}
