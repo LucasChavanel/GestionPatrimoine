@@ -62,7 +62,18 @@ categories_charges:
   frais_comptable: { lmnp_reel: deductible, foncier_reel: non_applicable }
   cfe: { lmnp_reel: deductible, foncier_reel: non_applicable }
   autre: { lmnp_reel: a_qualifier, foncier_reel: a_qualifier }
-cases_declaration: {} # rempli en Phase 4, numéros vérifiés chaque année
+cases_declaration:
+  # Numéros de case issus de sites tiers (pas la doc officielle DGFiP) — à
+  # vérifier avant toute déclaration réelle, voir unverified_warnings_declaration().
+  meuble_tourisme_non_classe_micro: "5NH"
+  meuble_tourisme_classe_micro: "5NG"
+  meuble_classique_micro: "5NI"
+  micro_foncier: "4BE"
+  foncier_reel_positif: "4BA"
+  foncier_reel_deficit_imputable_revenu_global: "4BC"
+  foncier_reel_deficit_report_fonciers: "4BB"
+  source: "Sites tiers (nopillo.com, hagnere-patrimoine.fr, rendimmo.fr) 2026-10-04 — à vérifier avec un professionnel ou la doc DGFiP officielle"
+  verified: false
 pea:
   plafond_versements: 150000
   anciennete_minimale_annees: 5

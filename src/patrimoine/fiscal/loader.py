@@ -99,13 +99,28 @@ class PatrimoineGlobalParams(BaseModel):
     verified: bool = False
 
 
+class CasesDeclaration(BaseModel):
+    """Numéros de case 2042-C-PRO/2044 — sources tierces, non officielles, voir
+    unverified_warnings_declaration()."""
+
+    meuble_tourisme_non_classe_micro: str
+    meuble_tourisme_classe_micro: str
+    meuble_classique_micro: str
+    micro_foncier: str
+    foncier_reel_positif: str
+    foncier_reel_deficit_imputable_revenu_global: str
+    foncier_reel_deficit_report_fonciers: str
+    source: str
+    verified: bool = False
+
+
 class FiscalParams(BaseModel):
     year: int
     meuble_tourisme: MeubleTourisme
     foncier: Foncier
     prelevements_sociaux: PrelevementsSociaux
     categories_charges: dict[str, TraitementCategorieCharge] = {}
-    cases_declaration: dict = {}
+    cases_declaration: CasesDeclaration | None = None
     pea: Pea | None = None
     patrimoine_global: PatrimoineGlobalParams | None = None
 
@@ -158,6 +173,16 @@ class FiscalParams(BaseModel):
             return []
         return [f"Patrimoine global {self.year} : paramètres non vérifiés ({self.patrimoine_global.source})"]
 
+    def unverified_warnings_declaration(self) -> list[str]:
+        """Avertissements pertinents pour le récapitulatif de déclaration (cases
+        2042-C-PRO/2044) — numéros issus de sites tiers, jamais la doc officielle."""
+        if self.cases_declaration is None or self.cases_declaration.verified:
+            return []
+        return [
+            f"Cases de déclaration {self.year} : numéros non vérifiés officiellement "
+            f"({self.cases_declaration.source})"
+        ]
+
     def unverified_warnings(self) -> list[str]:
         """Vue d'ensemble (dashboard) : tous les avertissements, toutes familles
         confondues — pas de notion de bien précis à ce niveau."""
@@ -169,6 +194,9 @@ class FiscalParams(BaseModel):
             if w not in warnings:
                 warnings.append(w)
         for w in self.unverified_warnings_patrimoine_global():
+            if w not in warnings:
+                warnings.append(w)
+        for w in self.unverified_warnings_declaration():
             if w not in warnings:
                 warnings.append(w)
         return warnings
