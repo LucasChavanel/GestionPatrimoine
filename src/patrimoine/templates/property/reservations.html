@@ -18,7 +18,7 @@
     </label>
 </form>
 
-<canvas id="chart-recettes" height="100"></canvas>
+<div class="chart-container"><canvas id="chart-recettes"></canvas></div>
 <p class="disclaimer">Recettes encaissées par mois, basées sur la date de paiement (pas la date de séjour) — voir la colonne "Payé le" ci-dessous.</p>
 
 <h2>{% if booking_edit %}Modifier la réservation{% else %}Ajouter une réservation{% endif %}</h2>
@@ -119,7 +119,7 @@
                 backgroundColor: '#2f5d50',
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
     });
 
     // Calcul bidirectionnel brut <-> net, à partir du % de commission de
