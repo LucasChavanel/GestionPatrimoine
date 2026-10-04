@@ -3,13 +3,25 @@ import io
 from datetime import date
 
 from patrimoine.models.booking import Booking
-from patrimoine.models.enums import Plateforme, StatutBooking, TypeLocation
+from patrimoine.models.coownership import CoOwnershipYear
+from patrimoine.models.enums import (
+    Courtier,
+    EnvelopeType,
+    Plateforme,
+    StatutBooking,
+    TypeLocation,
+    TypeTransaction,
+)
 from patrimoine.models.expense import Expense
+from patrimoine.models.investment_account import InvestmentAccount
+from patrimoine.models.investment_transaction import InvestmentTransaction
 from patrimoine.models.property import Property
 from patrimoine.services.declaration import (
     compute_recap_annee,
+    compute_recap_global,
     export_csv_charges_recettes,
     export_recap_csv,
+    export_recap_markdown,
 )
 
 
@@ -166,3 +178,50 @@ def test_export_recap_csv_bien_forme(session):
 
     assert rows[0] == ["bien", "regime", "case", "libelle", "montant"]
     assert any(r[0] == "Recap CSV" and r[2] == "5NH" for r in rows[1:])
+
+
+def test_recap_global_inclut_investissements_3916_indivision(session):
+    _make_property(session, nom="Bien", type_location=TypeLocation.meuble_tourisme_non_classe)
+
+    compte = InvestmentAccount(nom="CTO IBKR", type=EnvelopeType.cto, courtier=Courtier.ibkr, date_ouverture=date(2024, 1, 1))
+    session.add(compte)
+    session.commit()
+    session.refresh(compte)
+    session.add(
+        InvestmentTransaction(
+            account_id=compte.id, date=date(2026, 3, 1), type=TypeTransaction.dividende,
+            montant=100, devise="EUR",
+        )
+    )
+
+    session.add(
+        CoOwnershipYear(
+            annee=2026, libelle="Indivision familiale", quote_part_pct=25, revenus_bruts=1000,
+            charges=200, montants_proratises=True, montants_a_reporter="case 4BE : 200 €",
+        )
+    )
+    session.commit()
+
+    recap = compute_recap_global(session, 2026)
+    assert recap.case_plus_value == "3VG"
+    assert recap.case_dividendes == "2DC"
+    assert recap.case_credit_impot == "8VL"
+    assert recap.dividendes_cto.dividendes_bruts == 100.0
+    assert len(recap.comptes_ibkr) == 1
+    assert recap.comptes_ibkr[0].nom == "CTO IBKR"
+    assert len(recap.indivision) == 1
+    assert recap.indivision[0].montants_a_reporter == "case 4BE : 200 €"
+
+
+def test_export_recap_markdown_bien_forme(session):
+    p = _make_property(session, nom="Bien MD", type_location=TypeLocation.meuble_tourisme_non_classe)
+    session.add(_booking(p.id, 1000, 2026))
+    session.commit()
+
+    contenu = export_recap_markdown(session, 2026)
+    assert contenu.startswith("# Récapitulatif déclaration 2026")
+    assert "## Biens immobiliers" in contenu
+    assert "## Investissements (CTO)" in contenu
+    assert "## Comptes à l'étranger (formulaire 3916)" in contenu
+    assert "## Indivision" in contenu
+    assert "3VG" in contenu

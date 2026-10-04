@@ -139,9 +139,9 @@ def test_map_cash_transaction_type_depot_retrait():
     assert ibkr_flex.map_cash_transaction_type("Deposits/Withdrawals", -200) == TypeTransaction.retrait
 
 
-def test_map_cash_transaction_type_dividende_frais_interet():
+def test_map_cash_transaction_type_dividende_retenue_interet():
     assert ibkr_flex.map_cash_transaction_type("Dividends", 12.3) == TypeTransaction.dividende
-    assert ibkr_flex.map_cash_transaction_type("Withholding Tax", -1.8) == TypeTransaction.frais
+    assert ibkr_flex.map_cash_transaction_type("Withholding Tax", -1.8) == TypeTransaction.retenue_source
     assert ibkr_flex.map_cash_transaction_type("Broker Interest Received", 8.55) == TypeTransaction.interet
 
 

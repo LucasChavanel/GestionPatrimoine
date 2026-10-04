@@ -9,15 +9,18 @@ from __future__ import annotations
 
 import csv
 import io
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlmodel import Session, select
 
 from ..fiscal.loader import FiscalParams, load_fiscal_params
 from ..models.booking import Booking
-from ..models.enums import StatutBooking, TypeLocation
+from ..models.coownership import CoOwnershipYear
+from ..models.enums import Courtier, StatutBooking, TypeLocation
 from ..models.expense import Expense
+from ..models.investment_account import InvestmentAccount
 from ..models.property import Property
+from .capital_gains import DividendesCto, PlusValueCto, compute_dividendes_cto, compute_plus_values_cto
 from .foncier import simulate_foncier_year
 from .simulator import simulate_year
 
@@ -133,6 +136,116 @@ def compute_recap_annee(session: Session, annee: int) -> list[LigneDeclaration]:
         else:
             lignes.extend(_lignes_meuble(session, property_, annee, params))
     return lignes
+
+
+@dataclass
+class RecapGlobal:
+    annee: int
+    lignes_biens: list[LigneDeclaration] = field(default_factory=list)
+    plus_value_cto: PlusValueCto = field(default_factory=PlusValueCto)
+    dividendes_cto: DividendesCto = field(default_factory=DividendesCto)
+    case_plus_value: str | None = None
+    case_dividendes: str | None = None
+    case_credit_impot: str | None = None
+    comptes_ibkr: list[InvestmentAccount] = field(default_factory=list)
+    indivision: list[CoOwnershipYear] = field(default_factory=list)
+    avertissements: list[str] = field(default_factory=list)
+
+
+def compute_recap_global(session: Session, annee: int) -> RecapGlobal:
+    params = load_fiscal_params(annee)
+    cases = params.cases_declaration
+
+    plus_value = compute_plus_values_cto(session, annee)
+    dividendes = compute_dividendes_cto(session, annee)
+
+    comptes_ibkr = session.exec(
+        select(InvestmentAccount).where(InvestmentAccount.courtier == Courtier.ibkr).order_by(InvestmentAccount.nom)
+    ).all()
+
+    indivision = session.exec(
+        select(CoOwnershipYear).where(CoOwnershipYear.annee == annee).order_by(CoOwnershipYear.libelle)
+    ).all()
+
+    avertissements = list(params.unverified_warnings_declaration())
+    avertissements.extend(plus_value.avertissements)
+    avertissements.extend(dividendes.avertissements)
+
+    return RecapGlobal(
+        annee=annee,
+        lignes_biens=compute_recap_annee(session, annee),
+        plus_value_cto=plus_value,
+        dividendes_cto=dividendes,
+        case_plus_value=cases.plus_value_mobiliere if cases else None,
+        case_dividendes=cases.dividendes_etrangers if cases else None,
+        case_credit_impot=cases.credit_impot_etranger if cases else None,
+        comptes_ibkr=comptes_ibkr,
+        indivision=indivision,
+        avertissements=avertissements,
+    )
+
+
+def export_recap_markdown(session: Session, annee: int) -> str:
+    recap = compute_recap_global(session, annee)
+    lignes_md: list[str] = [f"# Récapitulatif déclaration {annee}", ""]
+    lignes_md.append(
+        "> Estimation indicative — à valider avec un professionnel. Les numéros de case viennent de "
+        "sites tiers, pas de la documentation officielle DGFiP."
+    )
+    lignes_md.append("")
+
+    if recap.avertissements:
+        lignes_md.append("## Avertissements")
+        lignes_md.extend(f"- ⚠️ {a}" for a in recap.avertissements)
+        lignes_md.append("")
+
+    lignes_md.append("## Biens immobiliers")
+    if recap.lignes_biens:
+        lignes_md.append("| Bien | Régime | Case | Libellé | Montant |")
+        lignes_md.append("| --- | --- | --- | --- | --- |")
+        for ligne in recap.lignes_biens:
+            lignes_md.append(
+                f"| {ligne.property_nom} | {ligne.regime} | {ligne.case or '—'} | "
+                f"{ligne.libelle} | {ligne.montant:.2f} € |"
+            )
+    else:
+        lignes_md.append("Aucun bien.")
+    lignes_md.append("")
+
+    lignes_md.append("## Investissements (CTO)")
+    lignes_md.append(
+        f"- Plus-value réalisée {annee} (case {recap.case_plus_value or '—'}) : "
+        f"{recap.plus_value_cto.plus_value_annee:.2f} €"
+    )
+    lignes_md.append(
+        f"- Dividendes bruts (case {recap.case_dividendes or '—'}) : {recap.dividendes_cto.dividendes_bruts:.2f} €"
+    )
+    lignes_md.append(
+        f"- Retenues à la source / crédit d'impôt étranger (case {recap.case_credit_impot or '—'}) : "
+        f"{recap.dividendes_cto.retenues_source:.2f} €"
+    )
+    lignes_md.append("")
+
+    lignes_md.append("## Comptes à l'étranger (formulaire 3916)")
+    if recap.comptes_ibkr:
+        for compte in recap.comptes_ibkr:
+            lignes_md.append(
+                f"- {compte.nom} — ouvert le {compte.date_ouverture or 'date inconnue'}. "
+                "Identification du teneur de compte (Interactive Brokers) à compléter vous-même, "
+                "non stockée par cette application."
+            )
+    else:
+        lignes_md.append("Aucun compte à l'étranger.")
+    lignes_md.append("")
+
+    lignes_md.append("## Indivision")
+    if recap.indivision:
+        for year in recap.indivision:
+            lignes_md.append(f"- {year.libelle} : {year.montants_a_reporter or 'montants non renseignés'}")
+    else:
+        lignes_md.append("Aucune donnée d'indivision pour cette année.")
+
+    return "\n".join(lignes_md) + "\n"
 
 
 def export_recap_csv(session: Session, annee: int) -> str:

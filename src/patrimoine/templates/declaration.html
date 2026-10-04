@@ -39,7 +39,43 @@ viennent de sites tiers, pas de la documentation officielle DGFiP, à confirmer 
 <p>Aucun bien ou aucune donnée pour {{ annee }}.</p>
 {% endif %}
 
+<h2>Investissements (CTO)</h2>
+<p>Plus-value réalisée {{ annee }} (case {{ recap.case_plus_value or "—" }}) : {{ "%.2f"|format(recap.plus_value_cto.plus_value_annee) }} €</p>
+<p>Dividendes bruts (case {{ recap.case_dividendes or "—" }}) : {{ "%.2f"|format(recap.dividendes_cto.dividendes_bruts) }} €</p>
+<p>Retenues à la source / crédit d'impôt étranger (case {{ recap.case_credit_impot or "—" }}) : {{ "%.2f"|format(recap.dividendes_cto.retenues_source) }} €</p>
+<p class="disclaimer">Limité aux comptes CTO — le PEA a un régime de différé d'imposition différent, non imposable annuellement.</p>
+
+<h2>Comptes à l'étranger (formulaire 3916)</h2>
+{% if recap.comptes_ibkr %}
+<table>
+    <thead><tr><th>Compte</th><th>Date d'ouverture</th></tr></thead>
+    <tbody>
+    {% for c in recap.comptes_ibkr %}
+        <tr><td>{{ c.nom }}</td><td>{{ c.date_ouverture or "—" }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+<p class="warning">⚠️ L'identification du teneur de compte (raison sociale, adresse d'Interactive Brokers) n'est pas stockée par cette application — à compléter vous-même sur le formulaire 3916.</p>
+{% else %}
+<p>Aucun compte à l'étranger.</p>
+{% endif %}
+
+<h2>Indivision</h2>
+{% if recap.indivision %}
+<table>
+    <thead><tr><th>Libellé</th><th>Montants à reporter (tels que transmis)</th></tr></thead>
+    <tbody>
+    {% for y in recap.indivision %}
+        <tr><td>{{ y.libelle }}</td><td>{{ y.montants_a_reporter or "—" }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune donnée d'indivision pour {{ annee }}.</p>
+{% endif %}
+
 <h2>Exports</h2>
 <p><a href="/declaration/export-charges.csv?annee={{ annee }}">Télécharger le CSV charges/recettes {{ annee }} (pour un comptable)</a></p>
-<p><a href="/declaration/export-recap.csv?annee={{ annee }}">Télécharger le récapitulatif {{ annee }} (CSV)</a></p>
+<p><a href="/declaration/export-recap.csv?annee={{ annee }}">Télécharger le récapitulatif biens {{ annee }} (CSV)</a></p>
+<p><a href="/declaration/export-recap.md?annee={{ annee }}">Télécharger le récapitulatif complet {{ annee }} (Markdown)</a></p>
 {% endblock %}

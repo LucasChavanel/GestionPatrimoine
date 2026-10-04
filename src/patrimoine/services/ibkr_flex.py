@@ -161,13 +161,18 @@ def parse_open_positions(xml_text: str) -> list[OpenPositionIbkr]:
 # est ignoré (jamais mappé par défaut), voir import_cash_transactions.
 _CASH_TYPE_DEPOT_RETRAIT = {"Deposits/Withdrawals"}
 _CASH_TYPE_DIVIDENDE = {"Dividends", "Payment In Lieu Of Dividends"}
-_CASH_TYPE_FRAIS = {"Withholding Tax", "Broker Fees", "Other Fees", "Commission Adjustments"}
+_CASH_TYPE_FRAIS = {"Broker Fees", "Other Fees", "Commission Adjustments"}
 _CASH_TYPE_INTERET = {"Broker Interest Received", "Broker Interest Paid"}
+_CASH_TYPE_RETENUE_SOURCE = {"Withholding Tax"}
 
 
 def map_cash_transaction_type(type_brut: str, montant: float) -> TypeTransaction | None:
     """None si le type IBKR n'est pas reconnu — l'appelant doit alors ignorer
-    la transaction et le signaler à l'utilisateur, jamais la mapper au hasard."""
+    la transaction et le signaler à l'utilisateur, jamais la mapper au hasard.
+
+    `Withholding Tax` a sa propre valeur (`retenue_source`), distincte des frais
+    de courtage génériques — nécessaire pour isoler le crédit d'impôt étranger
+    (case 8VL) dans le récap de déclaration, voir services/capital_gains.py."""
     if type_brut in _CASH_TYPE_DEPOT_RETRAIT:
         return TypeTransaction.depot if montant > 0 else TypeTransaction.retrait
     if type_brut in _CASH_TYPE_DIVIDENDE:
@@ -176,6 +181,8 @@ def map_cash_transaction_type(type_brut: str, montant: float) -> TypeTransaction
         return TypeTransaction.frais
     if type_brut in _CASH_TYPE_INTERET:
         return TypeTransaction.interet
+    if type_brut in _CASH_TYPE_RETENUE_SOURCE:
+        return TypeTransaction.retenue_source
     return None
 
 

@@ -72,7 +72,10 @@ cases_declaration:
   foncier_reel_positif: "4BA"
   foncier_reel_deficit_imputable_revenu_global: "4BC"
   foncier_reel_deficit_report_fonciers: "4BB"
-  source: "Sites tiers (nopillo.com, hagnere-patrimoine.fr, rendimmo.fr) 2026-10-04 — à vérifier avec un professionnel ou la doc DGFiP officielle"
+  plus_value_mobiliere: "3VG"
+  dividendes_etrangers: "2DC"
+  credit_impot_etranger: "8VL"
+  source: "Sites tiers (nopillo.com, hagnere-patrimoine.fr, rendimmo.fr, myimpots.com) 2026-10-04 — à vérifier avec un professionnel ou la doc DGFiP officielle"
   verified: false
 pea:
   plafond_versements: 150000
