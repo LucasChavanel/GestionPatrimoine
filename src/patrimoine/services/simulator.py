@@ -296,7 +296,7 @@ def simulate_year(session: Session, property_: Property, annee: int, tmi: float)
     micro_classe = _simulate_micro(recettes, fiscal_params.meuble_tourisme.micro_bic.classe, tmi, taux_ps)
     reel = _simulate_reel(session, property_, annee, tmi, taux_ps)
 
-    avertissements = list(fiscal_params.unverified_warnings())
+    avertissements = list(fiscal_params.unverified_warnings_lmnp())
     avertissements.extend(_avertissements_charges_a_qualifier(session, property_, annee))
     if not micro_non_classe.applicable:
         avertissements.append(
