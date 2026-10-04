@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Déclaration — Patrimoine{% endblock %}
+{% block content %}
+<h1>Déclaration</h1>
+<p class="disclaimer">Estimation indicative — à valider avec un professionnel. Les numéros de case
+viennent de sites tiers, pas de la documentation officielle DGFiP, à confirmer avant toute déclaration.</p>
+
+{% if avertissements %}
+<ul class="warning">
+    {% for a in avertissements %}
+    <li>⚠️ {{ a }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<form method="get" action="/declaration">
+    <label>Année
+        <input type="number" name="annee" value="{{ annee }}" onchange="this.form.submit()">
+    </label>
+</form>
+
+<h2>Lignes à reporter — {{ annee }}</h2>
+{% if lignes %}
+<table>
+    <thead><tr><th>Bien</th><th>Régime</th><th>Case</th><th>Libellé</th><th>Montant</th></tr></thead>
+    <tbody>
+    {% for l in lignes %}
+        <tr>
+            <td>{{ l.property_nom }}</td>
+            <td>{{ l.regime }}</td>
+            <td>{{ l.case or "—" }}</td>
+            <td>{{ l.libelle }}</td>
+            <td>{{ "%.2f"|format(l.montant) }} €</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucun bien ou aucune donnée pour {{ annee }}.</p>
+{% endif %}
+
+<h2>Exports</h2>
+<p><a href="/declaration/export-charges.csv?annee={{ annee }}">Télécharger le CSV charges/recettes {{ annee }} (pour un comptable)</a></p>
+<p><a href="/declaration/export-recap.csv?annee={{ annee }}">Télécharger le récapitulatif {{ annee }} (CSV)</a></p>
+{% endblock %}
