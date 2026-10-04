@@ -21,6 +21,7 @@ from .routes import (
     indivision,
     settings,
     simulator,
+    synthese,
 )
 from .routes import (
     calendar as calendar_routes,
@@ -47,6 +48,7 @@ def create_app() -> FastAPI:
     app.include_router(settings.router)
     app.include_router(agencies.router)
     app.include_router(calendar_routes.router)
+    app.include_router(synthese.router)
     return app
 
 

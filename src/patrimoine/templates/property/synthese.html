@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Synthèse — Patrimoine{% endblock %}
+{% block content %}
+{% include "property/_subnav.html" %}
+<h1>Synthèse annuelle</h1>
+<p class="disclaimer">Vue de rapprochement — montants bruts tels que saisis, pas un calcul fiscal (voir le Simulateur pour ça).</p>
+
+<form method="get" action="/biens/{{ property_.id }}/synthese">
+    <label>Année
+        <select name="annee" onchange="this.form.submit()">
+            {% for a in annees_disponibles %}
+            <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+        </select>
+    </label>
+</form>
+
+<section class="summary-cards">
+    <div class="card">
+        <h2>Recettes {{ annee }}</h2>
+        <p class="amount">{{ "%.2f"|format(result.recettes_annee) }} €</p>
+    </div>
+    <div class="card">
+        <h2>Charges {{ annee }}</h2>
+        <p class="amount">{{ "%.2f"|format(result.total_charges_annee) }} €</p>
+    </div>
+    <div class="card">
+        <h2>Résultat {{ annee }}</h2>
+        <p class="amount">{{ "%.2f"|format(result.recettes_annee - result.total_charges_annee) }} €</p>
+    </div>
+</section>
+
+<h2>Charges par catégorie {{ annee }}</h2>
+{% if result.charges_par_categorie %}
+<table>
+    <thead><tr><th>Catégorie</th><th>Montant</th></tr></thead>
+    <tbody>
+    {% for cat, montant in result.charges_par_categorie.items() %}
+        <tr><td>{{ cat }}</td><td>{{ "%.2f"|format(montant) }} €</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune charge pour {{ annee }}.</p>
+{% endif %}
+
+<h2>Autres indicateurs</h2>
+<table>
+    <tbody>
+        <tr><td>Part récupérable auprès du locataire ({{ annee }})</td><td>{{ "%.2f"|format(result.total_recuperable_annee) }} €</td></tr>
+        <tr><td>Fonds de travaux cumulé (depuis le début, jusqu'à fin {{ annee }})</td><td>{{ "%.2f"|format(result.fonds_travaux_cumule) }} €</td></tr>
+        <tr><td>Amortissements déduits ({{ annee }})</td><td>{{ "%.2f"|format(result.amortissements_deduits_annee) }} €</td></tr>
+        <tr><td>Cumul des amortissements pratiqués depuis le début</td><td>{{ "%.2f"|format(result.cumul_amortissements_pratiques) }} €</td></tr>
+    </tbody>
+</table>
+<p>Le fonds de travaux cumulé n'est pas réduit d'éventuels travaux déjà financés par ce fonds (non suivi par l'outil) — à rapprocher du solde annoncé par le syndic.</p>
+{% endblock %}
