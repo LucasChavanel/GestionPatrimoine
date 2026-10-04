@@ -28,6 +28,31 @@
     </form>
 </section>
 
+{% if ibkr_resultat %}
+<p>{{ ibkr_resultat }}</p>
+{% endif %}
+{% if ibkr_erreur %}
+<p class="warning">⚠️ {{ ibkr_erreur }}</p>
+{% endif %}
+
+{% if account.courtier.value == "ibkr" %}
+<section>
+    <h2>Synchronisation IBKR</h2>
+    <p>
+        À faire une seule fois, avant la première synchronisation régulière — importe les positions
+        actuelles telles que rapportées par IBKR (quantité + prix de revient moyen), sans historique
+        de trades (non disponible pour les positions déjà existantes).
+    </p>
+    <form method="post" action="/investissements/{{ account.id }}/ibkr/solde-ouverture">
+        <button type="submit">Importer le solde d'ouverture depuis IBKR</button>
+    </form>
+    <p>À recliquer à volonté — importe les nouvelles opérations (dépôts, dividendes, trades...) depuis la dernière synchronisation.</p>
+    <form method="post" action="/investissements/{{ account.id }}/ibkr/synchroniser">
+        <button type="submit">Synchroniser les opérations IBKR</button>
+    </form>
+</section>
+{% endif %}
+
 {% if suivi_pea %}
 <section>
     <h2>Suivi PEA</h2>
