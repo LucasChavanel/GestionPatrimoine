@@ -17,8 +17,8 @@
             <td>{{ y.annee }}</td>
             <td>{{ y.libelle }}</td>
             <td>{{ y.quote_part_pct }} %</td>
-            <td>{{ "%.2f"|format(y.revenus_bruts) }} €</td>
-            <td>{{ "%.2f"|format(y.charges) }} €</td>
+            <td>{{ y.revenus_bruts|montant }} €</td>
+            <td>{{ y.charges|montant }} €</td>
             <td>{{ "Oui" if y.montants_proratises else "Non" }}</td>
             <td>
                 {% set entity_type = "coownership_year" %}

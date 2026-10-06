@@ -20,7 +20,7 @@
             <td>{{ t.quantite or "" }}</td>
             <td>{{ t.prix_unitaire or "" }}</td>
             <td>{{ t.frais }}</td>
-            <td>{{ "%.2f"|format(t.montant) }} {{ t.devise }}</td>
+            <td>{{ t.montant|montant }} {{ t.devise }}</td>
             <td>
                 <a href="/investissements/{{ account.id }}/operations/{{ t.id }}/modifier">Modifier</a>
                 <form method="post" action="/investissements/{{ account.id }}/operations/{{ t.id }}/supprimer" style="display:inline">

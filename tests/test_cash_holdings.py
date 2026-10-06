@@ -17,7 +17,7 @@ def test_creer_compte_courant_sans_details_terme(client):
     r = client.get("/liquidites")
     assert r.status_code == 200
     assert "Compte courant" in r.text
-    assert "1500.50" in r.text
+    assert "1 500.50" in r.text
 
 
 def test_creer_compte_a_terme_avec_details(client):

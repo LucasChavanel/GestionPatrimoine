@@ -53,7 +53,9 @@
         <form method="post" action="{% if security_edit %}/titres/{{ security_edit.id }}{% else %}/titres{% endif %}">
             <label>ISIN <input type="text" name="isin" value="{{ security_edit.isin if security_edit else '' }}" required></label>
             <label>Nom <input type="text" name="nom" value="{{ security_edit.nom if security_edit else '' }}" required></label>
-            <label>Ticker Yahoo Finance <input type="text" name="ticker_yahoo" value="{{ security_edit.ticker_yahoo if security_edit and security_edit.ticker_yahoo else '' }}"></label>
+            <label>Ticker Yahoo Finance (laisser vide pour résolution automatique depuis l'ISIN)
+                <input type="text" name="ticker_yahoo" value="{{ security_edit.ticker_yahoo if security_edit and security_edit.ticker_yahoo else '' }}">
+            </label>
             <label>Catégorie d'allocation
                 <select name="categorie_allocation">
                     <option value="">—</option>

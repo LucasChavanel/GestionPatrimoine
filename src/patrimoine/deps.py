@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 
 from .db import get_engine, get_session
 from .fiscal.loader import load_fiscal_params
+from .formatting import format_montant
 from .models.property import Property
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -27,6 +28,7 @@ def _avertissements_globaux(request: Request) -> dict:
 
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR), context_processors=[_avertissements_globaux])
+templates.env.filters["montant"] = format_montant
 
 
 def get_property_or_404(property_id: int, session: Session = Depends(get_session)) -> Property:

@@ -63,9 +63,9 @@
     <div class="card-header"><h2>Suivi PEA</h2></div>
     <div class="card-body">
         <div class="inline-stats" style="margin-bottom: 0.5rem;">
-            <div class="inline-stat"><span class="k">Versements cumulés</span><span class="v">{{ "%.2f"|format(suivi_pea.versements_cumules) }} €</span></div>
-            <div class="inline-stat"><span class="k">Plafond</span><span class="v">{{ "%.0f"|format(suivi_pea.plafond) }} €</span></div>
-            <div class="inline-stat"><span class="k">Marge disponible</span><span class="v"{% if suivi_pea.marge_disponible < 0 %} style="color:var(--negative)"{% endif %}>{{ "%.2f"|format(suivi_pea.marge_disponible) }} €</span></div>
+            <div class="inline-stat"><span class="k">Versements cumulés</span><span class="v">{{ suivi_pea.versements_cumules|montant }} €</span></div>
+            <div class="inline-stat"><span class="k">Plafond</span><span class="v">{{ suivi_pea.plafond|montant(0) }} €</span></div>
+            <div class="inline-stat"><span class="k">Marge disponible</span><span class="v"{% if suivi_pea.marge_disponible < 0 %} style="color:var(--negative)"{% endif %}>{{ suivi_pea.marge_disponible|montant }} €</span></div>
             {% if suivi_pea.anciennete_annees is not none %}
             <div class="inline-stat"><span class="k">Ancienneté</span><span class="v">{{ "%.1f"|format(suivi_pea.anciennete_annees) }} ans</span></div>
             {% endif %}
@@ -85,10 +85,10 @@
     <div class="card-header"><h2>Allocation World / Europe</h2></div>
     <div class="card-body">
         <div class="inline-stats" style="margin-bottom: 0.5rem;">
-            <div class="inline-stat"><span class="k">World</span><span class="v">{{ "%.2f"|format(allocation.valeur_world) }} €</span></div>
-            <div class="inline-stat"><span class="k">Europe</span><span class="v">{{ "%.2f"|format(allocation.valeur_europe) }} €</span></div>
+            <div class="inline-stat"><span class="k">World</span><span class="v">{{ allocation.valeur_world|montant }} €</span></div>
+            <div class="inline-stat"><span class="k">Europe</span><span class="v">{{ allocation.valeur_europe|montant }} €</span></div>
             {% if allocation.valeur_autre %}
-            <div class="inline-stat"><span class="k">Autre</span><span class="v">{{ "%.2f"|format(allocation.valeur_autre) }} €</span></div>
+            <div class="inline-stat"><span class="k">Autre</span><span class="v">{{ allocation.valeur_autre|montant }} €</span></div>
             {% endif %}
             {% if allocation.pct_europe is not none %}
             <div class="inline-stat"><span class="k">Part Europe</span><span class="v">{{ "%.1f"|format(allocation.pct_europe * 100) }} %</span></div>
@@ -119,8 +119,8 @@
             <td>{{ p.security.nom }}</td>
             <td>{{ p.security.isin }}</td>
             <td>{{ p.quantite_detenue }}</td>
-            <td>{{ "%.4f"|format(p.prmp) }} {{ account.devise_base }}</td>
-            <td>{{ "%.2f"|format(p.montant_investi) }} {{ account.devise_base }}</td>
+            <td>{{ p.prmp|montant(4) }} {{ account.devise_base }}</td>
+            <td>{{ p.montant_investi|montant }} {{ account.devise_base }}</td>
             <td>{% if p.security.dernier_cours %}{{ p.security.dernier_cours }} {{ p.security.dernier_cours_devise or "" }} ({{ p.security.dernier_cours_date }}){% else %}—{% endif %}</td>
         </tr>
     {% endfor %}

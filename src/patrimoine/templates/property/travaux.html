@@ -24,13 +24,13 @@
         <tr>
             <td>{{ i.date_mise_en_service }}</td>
             <td>{{ i.type.value }}</td>
-            <td>{{ "%.2f"|format(i.montant) }} €</td>
+            <td>{{ i.montant|montant }} €</td>
             <td>{{ "Oui" if i.avant_premiere_mise_en_location else "Non" }}</td>
             <td>
                 {% if i.avant_premiere_mise_en_location %}
                     intégré à la base du bâti
                 {% else %}
-                    {{ "%.2f"|format(row.dotation_annee) }} €
+                    {{ row.dotation_annee|montant }} €
                 {% endif %}
             </td>
             <td>

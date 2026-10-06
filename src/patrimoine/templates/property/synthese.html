@@ -17,15 +17,15 @@
 <div class="stat-grid">
     <div class="stat-card">
         <div class="stat-label">Recettes {{ annee }}</div>
-        <p class="stat-value">{{ "%.2f"|format(result.recettes_annee) }} €</p>
+        <p class="stat-value">{{ result.recettes_annee|montant }} €</p>
     </div>
     <div class="stat-card">
         <div class="stat-label">Charges {{ annee }}</div>
-        <p class="stat-value">{{ "%.2f"|format(result.total_charges_annee) }} €</p>
+        <p class="stat-value">{{ result.total_charges_annee|montant }} €</p>
     </div>
     <div class="stat-card">
         <div class="stat-label">Résultat {{ annee }}</div>
-        <p class="stat-value">{{ "%.2f"|format(result.recettes_annee - result.total_charges_annee) }} €</p>
+        <p class="stat-value">{{ (result.recettes_annee - result.total_charges_annee)|montant }} €</p>
     </div>
 </div>
 
@@ -35,7 +35,7 @@
     <thead><tr><th>Catégorie</th><th>Montant</th></tr></thead>
     <tbody>
     {% for cat, montant in result.charges_par_categorie.items() %}
-        <tr><td>{{ cat }}</td><td>{{ "%.2f"|format(montant) }} €</td></tr>
+        <tr><td>{{ cat }}</td><td>{{ montant|montant }} €</td></tr>
     {% endfor %}
     </tbody>
 </table>
@@ -46,10 +46,10 @@
 <p class="section-title">Autres indicateurs</p>
 <table>
     <tbody>
-        <tr><td>Part récupérable auprès du locataire ({{ annee }})</td><td>{{ "%.2f"|format(result.total_recuperable_annee) }} €</td></tr>
-        <tr><td>Fonds de travaux cumulé (depuis le début, jusqu'à fin {{ annee }})</td><td>{{ "%.2f"|format(result.fonds_travaux_cumule) }} €</td></tr>
-        <tr><td>Amortissements déduits ({{ annee }})</td><td>{{ "%.2f"|format(result.amortissements_deduits_annee) }} €</td></tr>
-        <tr><td>Cumul des amortissements pratiqués depuis le début</td><td>{{ "%.2f"|format(result.cumul_amortissements_pratiques) }} €</td></tr>
+        <tr><td>Part récupérable auprès du locataire ({{ annee }})</td><td>{{ result.total_recuperable_annee|montant }} €</td></tr>
+        <tr><td>Fonds de travaux cumulé (depuis le début, jusqu'à fin {{ annee }})</td><td>{{ result.fonds_travaux_cumule|montant }} €</td></tr>
+        <tr><td>Amortissements déduits ({{ annee }})</td><td>{{ result.amortissements_deduits_annee|montant }} €</td></tr>
+        <tr><td>Cumul des amortissements pratiqués depuis le début</td><td>{{ result.cumul_amortissements_pratiques|montant }} €</td></tr>
     </tbody>
 </table>
 <p class="page-subtitle">Le fonds de travaux cumulé n'est pas réduit d'éventuels travaux déjà financés par ce fonds (non suivi par l'outil) — à rapprocher du solde annoncé par le syndic.</p>

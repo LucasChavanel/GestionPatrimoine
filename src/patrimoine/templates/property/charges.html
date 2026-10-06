@@ -15,7 +15,7 @@
 </form>
 
 <div class="chart-container"><canvas id="chart-charges"></canvas></div>
-<p><strong>Total {{ annee }} : {{ "%.2f"|format(total_annee) }} €</strong> — dont récupérable : {{ "%.2f"|format(total_recuperable) }} €</p>
+<p><strong>Total {{ annee }} : {{ total_annee|montant }} €</strong> — dont récupérable : {{ total_recuperable|montant }} €</p>
 
 <div class="section-header">
     <h2>Charges {{ annee }}</h2>
@@ -32,8 +32,8 @@
         <tr>
             <td>{{ e.date_paiement }}</td>
             <td>{{ e.categorie.value }}</td>
-            <td>{{ "%.2f"|format(e.montant_ttc) }} €</td>
-            <td>{{ "%.2f"|format(e.montant_recuperable) }} €</td>
+            <td>{{ e.montant_ttc|montant }} €</td>
+            <td>{{ e.montant_recuperable|montant }} €</td>
             <td>{{ e.fournisseur or "" }}</td>
             <td>
                 {% set entity_type = "expense" %}

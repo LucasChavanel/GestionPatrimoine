@@ -17,6 +17,7 @@ from ..models.investment_transaction import InvestmentTransaction
 from ..models.security import Security
 from . import ibkr_flex
 from .ibkr_credentials import IbkrCredentials
+from .market_data import resolve_ticker_from_isin
 
 
 def get_or_create_security(session: Session, isin: str, nom: str) -> Security | None:
@@ -24,7 +25,7 @@ def get_or_create_security(session: Session, isin: str, nom: str) -> Security | 
         return None
     security = session.exec(select(Security).where(Security.isin == isin)).first()
     if security is None:
-        security = Security(isin=isin, nom=nom or isin)
+        security = Security(isin=isin, nom=nom or isin, ticker_yahoo=resolve_ticker_from_isin(isin))
         session.add(security)
         session.commit()
         session.refresh(security)
