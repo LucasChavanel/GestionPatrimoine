@@ -17,62 +17,10 @@
 <div class="chart-container"><canvas id="chart-recettes"></canvas></div>
 <p class="disclaimer">Recettes encaissées par mois, basées sur la date de paiement (pas la date de séjour) — voir la colonne "Payé le" ci-dessous.</p>
 
-<h2>{% if booking_edit %}Modifier la réservation{% else %}Ajouter une réservation{% endif %}</h2>
-<form method="post" action="{% if booking_edit %}/biens/{{ property_.id }}/reservations/{{ booking_edit.id }}{% else %}/biens/{{ property_.id }}/reservations{% endif %}" id="form-reservation">
-    <label>Date d'arrivée <input type="date" name="date_arrivee" value="{{ booking_edit.date_arrivee if booking_edit else '' }}" required></label>
-    <label>Date de départ <input type="date" name="date_depart" value="{{ booking_edit.date_depart if booking_edit else '' }}" required></label>
-    <label>Plateforme
-        <select name="plateforme">
-            {% for p in plateformes %}
-            <option value="{{ p.value }}" {% if booking_edit and booking_edit.plateforme == p %}selected{% endif %}>{{ p.value }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    <label>Agence
-        <select name="agency_id" id="champ_agence">
-            <option value="">— aucune —</option>
-            {% for a in agencies %}
-            <option value="{{ a.id }}" data-commission-pct="{{ a.commission_pct_defaut }}" {% if booking_edit and booking_edit.agency_id == a.id %}selected{% endif %}>{{ a.nom }} ({{ a.commission_pct_defaut }} %)</option>
-            {% endfor %}
-        </select>
-        — <a href="/agences">gérer les agences</a>
-    </label>
-
-    <label>Montant brut — tout compris, hors taxe de séjour (€)
-        <input type="number" step="0.01" name="montant_brut" id="champ_brut" value="{{ booking_edit.montant_brut if booking_edit else '' }}" required>
-    </label>
-    <label>Commission agence/plateforme (€) <input type="number" step="0.01" name="commission_plateforme" id="champ_commission" value="{{ booking_edit.commission_plateforme if booking_edit else 0 }}"></label>
-    <label>Net encaissé — saisissable si c'est ce qu'indique la fiche agence (€)
-        <input type="number" step="0.01" id="champ_net" value="{{ booking_edit.net_encaisse if booking_edit else '' }}">
-    </label>
-
-    <label>Date de paiement — détermine le mois/année de la recette pour la compta (laisser vide si pas encore encaissé)
-        <input type="date" name="date_paiement" value="{{ booking_edit.date_paiement if booking_edit and booking_edit.date_paiement else '' }}">
-    </label>
-
-    <label>Frais de ménage facturés — informatif, inclus dans le montant brut (€)
-        <input type="number" step="0.01" name="frais_menage_factures" value="{{ booking_edit.frais_menage_factures if booking_edit else 0 }}">
-    </label>
-    <label>Taxe de séjour collectée — informatif (€) <input type="number" step="0.01" name="taxe_sejour_collectee" value="{{ booking_edit.taxe_sejour_collectee if booking_edit else 0 }}"></label>
-    <label>Taxe de séjour reversée par
-        <select name="taxe_sejour_reversee_par">
-            <option value="">—</option>
-            {% for r in reversements %}
-            <option value="{{ r.value }}" {% if booking_edit and booking_edit.taxe_sejour_reversee_par == r %}selected{% endif %}>{{ r.value }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    <label>Statut
-        <select name="statut">
-            <option value="confirmee" {% if booking_edit and booking_edit.statut.value == 'confirmee' %}selected{% endif %}>Confirmée</option>
-            <option value="annulee" {% if booking_edit and booking_edit.statut.value == 'annulee' %}selected{% endif %}>Annulée</option>
-        </select>
-    </label>
-    <label>Notes <input type="text" name="notes" value="{{ booking_edit.notes if booking_edit and booking_edit.notes else '' }}"></label>
-    <button type="submit">{% if booking_edit %}Enregistrer les modifications{% else %}Ajouter{% endif %}</button>
-</form>
-
-<h2>Réservations {{ annee }}</h2>
+<div class="section-header">
+    <h2>Réservations {{ annee }}</h2>
+    <button onclick="document.getElementById('dialog-reservation').showModal()">+ Ajouter</button>
+</div>
 {% if bookings %}
 <table>
     <thead><tr><th>Arrivée</th><th>Départ</th><th>Nuits</th><th>Plateforme</th><th>Agence</th><th>Montant brut</th><th>Net encaissé</th><th>Payé le</th><th>Statut</th><th></th></tr></thead>
@@ -91,7 +39,7 @@
             <td>
                 <a href="/biens/{{ property_.id }}/reservations/{{ b.id }}/modifier">Modifier</a>
                 <form method="post" action="/biens/{{ property_.id }}/reservations/{{ b.id }}/supprimer" style="display:inline">
-                    <button type="submit">Supprimer</button>
+                    <button type="submit" class="secondary">Supprimer</button>
                 </form>
             </td>
         </tr>
@@ -100,6 +48,71 @@
 </table>
 {% else %}
 <p>Aucune réservation pour {{ annee }}.</p>
+{% endif %}
+
+<dialog id="dialog-reservation">
+    <article>
+        <h3>{% if booking_edit %}Modifier la réservation{% else %}Ajouter une réservation{% endif %}</h3>
+        <form method="post" action="{% if booking_edit %}/biens/{{ property_.id }}/reservations/{{ booking_edit.id }}{% else %}/biens/{{ property_.id }}/reservations{% endif %}" id="form-reservation">
+            <label>Date d'arrivée <input type="date" name="date_arrivee" value="{{ booking_edit.date_arrivee if booking_edit else '' }}" required></label>
+            <label>Date de départ <input type="date" name="date_depart" value="{{ booking_edit.date_depart if booking_edit else '' }}" required></label>
+            <label>Plateforme
+                <select name="plateforme">
+                    {% for p in plateformes %}
+                    <option value="{{ p.value }}" {% if booking_edit and booking_edit.plateforme == p %}selected{% endif %}>{{ p.value }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Agence
+                <select name="agency_id" id="champ_agence">
+                    <option value="">— aucune —</option>
+                    {% for a in agencies %}
+                    <option value="{{ a.id }}" data-commission-pct="{{ a.commission_pct_defaut }}" {% if booking_edit and booking_edit.agency_id == a.id %}selected{% endif %}>{{ a.nom }} ({{ a.commission_pct_defaut }} %)</option>
+                    {% endfor %}
+                </select>
+                — <a href="/agences">gérer les agences</a>
+            </label>
+
+            <label>Montant brut — tout compris, hors taxe de séjour (€)
+                <input type="number" step="0.01" name="montant_brut" id="champ_brut" value="{{ booking_edit.montant_brut if booking_edit else '' }}" required>
+            </label>
+            <label>Commission agence/plateforme (€) <input type="number" step="0.01" name="commission_plateforme" id="champ_commission" value="{{ booking_edit.commission_plateforme if booking_edit else 0 }}"></label>
+            <label>Net encaissé — saisissable si c'est ce qu'indique la fiche agence (€)
+                <input type="number" step="0.01" id="champ_net" value="{{ booking_edit.net_encaisse if booking_edit else '' }}">
+            </label>
+
+            <label>Date de paiement — détermine le mois/année de la recette pour la compta (laisser vide si pas encore encaissé)
+                <input type="date" name="date_paiement" value="{{ booking_edit.date_paiement if booking_edit and booking_edit.date_paiement else '' }}">
+            </label>
+
+            <label>Frais de ménage facturés — informatif, inclus dans le montant brut (€)
+                <input type="number" step="0.01" name="frais_menage_factures" value="{{ booking_edit.frais_menage_factures if booking_edit else 0 }}">
+            </label>
+            <label>Taxe de séjour collectée — informatif (€) <input type="number" step="0.01" name="taxe_sejour_collectee" value="{{ booking_edit.taxe_sejour_collectee if booking_edit else 0 }}"></label>
+            <label>Taxe de séjour reversée par
+                <select name="taxe_sejour_reversee_par">
+                    <option value="">—</option>
+                    {% for r in reversements %}
+                    <option value="{{ r.value }}" {% if booking_edit and booking_edit.taxe_sejour_reversee_par == r %}selected{% endif %}>{{ r.value }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Statut
+                <select name="statut">
+                    <option value="confirmee" {% if booking_edit and booking_edit.statut.value == 'confirmee' %}selected{% endif %}>Confirmée</option>
+                    <option value="annulee" {% if booking_edit and booking_edit.statut.value == 'annulee' %}selected{% endif %}>Annulée</option>
+                </select>
+            </label>
+            <label>Notes <input type="text" name="notes" value="{{ booking_edit.notes if booking_edit and booking_edit.notes else '' }}"></label>
+            <footer>
+                <button type="button" class="secondary" onclick="document.getElementById('dialog-reservation').close()">Annuler</button>
+                <button type="submit">{% if booking_edit %}Enregistrer les modifications{% else %}Ajouter{% endif %}</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+{% if booking_edit %}
+<script>document.getElementById('dialog-reservation').showModal()</script>
 {% endif %}
 
 <script src="/static/js/chart.umd.min.js"></script>

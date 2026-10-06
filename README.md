@@ -10,6 +10,15 @@ Outil **local** de gestion de patrimoine personnel — Phase 1 : socle + module 
 - Lecture seule vis-à-vis des courtiers (phases suivantes) : l'app ne passe jamais d'ordre.
 - Les règles fiscales sont des paramètres versionnés (`src/patrimoine/fiscal/params/<année>.yaml`), jamais du code en dur. Chaque valeur a un champ `verified` ; un avertissement s'affiche tant qu'il est à `false`.
 
+## Assets vendorisés
+
+Toutes les ressources tierces sont copiées dans le repo (`src/patrimoine/static/`), jamais chargées depuis un CDN :
+
+- [htmx](https://htmx.org) (`js/htmx.min.js`) — BSD 2-Clause
+- [Chart.js](https://www.chartjs.org) (`js/chart.umd.min.js`) — MIT
+- [Pico CSS](https://picocss.com) v2.1.1 (`css/pico.min.css`) — MIT
+- [Tabler Icons](https://tabler.io/icons) (`icons/*.svg`) — MIT
+
 ## Installation
 
 Prérequis : [uv](https://docs.astral.sh/uv/) (gère lui-même l'installation de Python 3.12, indépendamment du Python système).

@@ -27,6 +27,30 @@ body {
     color: white;
     text-decoration: none;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Icônes SVG vendorisées (Tabler Icons, MIT), posées via
+   <span class="icon" style="--icon-src:url(...)">. Un masque CSS avec
+   background-color: currentColor permet à l'icône de suivre la couleur du
+   texte environnant (ce que ferait stroke="currentColor" dans le SVG si on
+   l'affichait en inline, mais pas via une image externe). */
+.icon {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.2em;
+    background-color: currentColor;
+    mask-image: var(--icon-src);
+    -webkit-mask-image: var(--icon-src);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
 }
 
 main {
@@ -99,6 +123,35 @@ form button {
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
+}
+
+/* En-tête d'une section liste : titre + bouton "+ Ajouter" toujours au même
+   endroit (ouvre la modale juste en dessous), quel que soit l'écran. */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.section-header h2 {
+    margin: 0;
+}
+
+/* Formulaires Ajouter/Modifier déplacés en modale (<dialog>, stylisé
+   nativement par Pico) plutôt que dans le flux de la page — jamais deux
+   écrans avec le formulaire à un endroit différent. */
+dialog form {
+    max-width: none;
+    margin-bottom: 0;
+}
+
+dialog footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
 }
 
 .summary-cards {

@@ -4,15 +4,10 @@
 <h1>Agences</h1>
 <p>Fiche réutilisable pour préremplir le % de commission lors de la saisie d'une réservation.</p>
 
-<h2>{% if agency_edit %}Modifier l'agence{% else %}Ajouter une agence{% endif %}</h2>
-<form method="post" action="{% if agency_edit %}/agences/{{ agency_edit.id }}{% else %}/agences{% endif %}">
-    <label>Nom <input type="text" name="nom" value="{{ agency_edit.nom if agency_edit else '' }}" required></label>
-    <label>Commission par défaut (%) <input type="number" step="0.01" name="commission_pct_defaut" value="{{ agency_edit.commission_pct_defaut if agency_edit else '' }}" required></label>
-    <label>Notes <input type="text" name="notes" value="{{ agency_edit.notes if agency_edit and agency_edit.notes else '' }}"></label>
-    <button type="submit">{% if agency_edit %}Enregistrer{% else %}Ajouter{% endif %}</button>
-</form>
-
-<h2>Liste</h2>
+<div class="section-header">
+    <h2>Liste</h2>
+    <button onclick="document.getElementById('dialog-agence').showModal()">+ Ajouter</button>
+</div>
 {% if agencies %}
 <table>
     <thead><tr><th>Nom</th><th>Commission par défaut</th><th>Notes</th><th></th></tr></thead>
@@ -25,7 +20,7 @@
             <td>
                 <a href="/agences/{{ a.id }}/modifier">Modifier</a>
                 <form method="post" action="/agences/{{ a.id }}/supprimer" style="display:inline">
-                    <button type="submit">Supprimer</button>
+                    <button type="submit" class="secondary">Supprimer</button>
                 </form>
             </td>
         </tr>
@@ -34,5 +29,23 @@
 </table>
 {% else %}
 <p>Aucune agence renseignée.</p>
+{% endif %}
+
+<dialog id="dialog-agence">
+    <article>
+        <h3>{% if agency_edit %}Modifier l'agence{% else %}Ajouter une agence{% endif %}</h3>
+        <form method="post" action="{% if agency_edit %}/agences/{{ agency_edit.id }}{% else %}/agences{% endif %}">
+            <label>Nom <input type="text" name="nom" value="{{ agency_edit.nom if agency_edit else '' }}" required></label>
+            <label>Commission par défaut (%) <input type="number" step="0.01" name="commission_pct_defaut" value="{{ agency_edit.commission_pct_defaut if agency_edit else '' }}" required></label>
+            <label>Notes <input type="text" name="notes" value="{{ agency_edit.notes if agency_edit and agency_edit.notes else '' }}"></label>
+            <footer>
+                <button type="button" class="secondary" onclick="document.getElementById('dialog-agence').close()">Annuler</button>
+                <button type="submit">{% if agency_edit %}Enregistrer{% else %}Ajouter{% endif %}</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+{% if agency_edit %}
+<script>document.getElementById('dialog-agence').showModal()</script>
 {% endif %}
 {% endblock %}

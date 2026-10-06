@@ -4,24 +4,10 @@
 <h1>Titres</h1>
 <p>Référentiel des titres (ISIN unique), partagé par tous les comptes d'investissement.</p>
 
-<h2>{% if security_edit %}Modifier le titre{% else %}Ajouter un titre{% endif %}</h2>
-<form method="post" action="{% if security_edit %}/titres/{{ security_edit.id }}{% else %}/titres{% endif %}">
-    <label>ISIN <input type="text" name="isin" value="{{ security_edit.isin if security_edit else '' }}" required></label>
-    <label>Nom <input type="text" name="nom" value="{{ security_edit.nom if security_edit else '' }}" required></label>
-    <label>Ticker Yahoo Finance <input type="text" name="ticker_yahoo" value="{{ security_edit.ticker_yahoo if security_edit and security_edit.ticker_yahoo else '' }}"></label>
-    <label>Catégorie d'allocation
-        <select name="categorie_allocation">
-            <option value="">—</option>
-            {% for c in categories %}
-            <option value="{{ c.value }}" {% if security_edit and security_edit.categorie_allocation == c %}selected{% endif %}>{{ c.value }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    <label>Dernier cours <input type="number" step="0.0001" name="dernier_cours" value="{{ security_edit.dernier_cours if security_edit and security_edit.dernier_cours else '' }}"></label>
-    <button type="submit">{% if security_edit %}Enregistrer{% else %}Ajouter{% endif %}</button>
-</form>
-
-<h2>Liste</h2>
+<div class="section-header">
+    <h2>Liste</h2>
+    <button onclick="document.getElementById('dialog-titre').showModal()">+ Ajouter</button>
+</div>
 {% if securities %}
 <table>
     <thead><tr><th>ISIN</th><th>Nom</th><th>Ticker</th><th>Allocation</th><th>Dernier cours</th><th></th></tr></thead>
@@ -37,11 +23,11 @@
                 <a href="/titres/{{ s.id }}/modifier">Modifier</a>
                 {% if s.ticker_yahoo %}
                 <form method="post" action="/titres/{{ s.id }}/rafraichir-cours" style="display:inline">
-                    <button type="submit">Rafraîchir le cours</button>
+                    <button type="submit" class="secondary">Rafraîchir le cours</button>
                 </form>
                 {% endif %}
                 <form method="post" action="/titres/{{ s.id }}/supprimer" style="display:inline">
-                    <button type="submit">Supprimer</button>
+                    <button type="submit" class="secondary">Supprimer</button>
                 </form>
             </td>
         </tr>
@@ -50,5 +36,32 @@
 </table>
 {% else %}
 <p>Aucun titre renseigné.</p>
+{% endif %}
+
+<dialog id="dialog-titre">
+    <article>
+        <h3>{% if security_edit %}Modifier le titre{% else %}Ajouter un titre{% endif %}</h3>
+        <form method="post" action="{% if security_edit %}/titres/{{ security_edit.id }}{% else %}/titres{% endif %}">
+            <label>ISIN <input type="text" name="isin" value="{{ security_edit.isin if security_edit else '' }}" required></label>
+            <label>Nom <input type="text" name="nom" value="{{ security_edit.nom if security_edit else '' }}" required></label>
+            <label>Ticker Yahoo Finance <input type="text" name="ticker_yahoo" value="{{ security_edit.ticker_yahoo if security_edit and security_edit.ticker_yahoo else '' }}"></label>
+            <label>Catégorie d'allocation
+                <select name="categorie_allocation">
+                    <option value="">—</option>
+                    {% for c in categories %}
+                    <option value="{{ c.value }}" {% if security_edit and security_edit.categorie_allocation == c %}selected{% endif %}>{{ c.value }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Dernier cours <input type="number" step="0.0001" name="dernier_cours" value="{{ security_edit.dernier_cours if security_edit and security_edit.dernier_cours else '' }}"></label>
+            <footer>
+                <button type="button" class="secondary" onclick="document.getElementById('dialog-titre').close()">Annuler</button>
+                <button type="submit">{% if security_edit %}Enregistrer{% else %}Ajouter{% endif %}</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
+{% if security_edit %}
+<script>document.getElementById('dialog-titre').showModal()</script>
 {% endif %}
 {% endblock %}
