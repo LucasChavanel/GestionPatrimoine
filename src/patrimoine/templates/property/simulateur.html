@@ -2,12 +2,11 @@
 {% block title %}Simulateur fiscal — Patrimoine{% endblock %}
 {% block content %}
 {% include "property/_subnav.html" %}
-<h1>Simulateur fiscal</h1>
 <p class="disclaimer">⚠️ Estimation indicative — à valider avec un professionnel.</p>
 
-<form method="get" action="/biens/{{ property_.id }}/simulateur">
-    <label>Année <input type="number" name="annee" value="{{ annee }}"></label>
-    <label>TMI (%) <input type="number" step="0.1" name="tmi_pct" value="{{ tmi_pct }}"></label>
+<form method="get" action="/biens/{{ property_.id }}/simulateur" style="display: flex; flex-direction: row; align-items: flex-end; max-width: none; gap: 10px;">
+    <label>Année <input type="number" name="annee" value="{{ annee }}" style="width: 100px;"></label>
+    <label>TMI (%) <input type="number" step="0.1" name="tmi_pct" value="{{ tmi_pct }}" style="width: 100px;"></label>
     <button type="submit">Simuler</button>
 </form>
 

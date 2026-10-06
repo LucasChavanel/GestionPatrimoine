@@ -1,25 +1,42 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="light">
+<html lang="fr">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Patrimoine{% endblock %}</title>
-    <link rel="stylesheet" href="/static/css/pico.min.css" />
     <link rel="stylesheet" href="/static/css/style.css" />
     <script src="/static/js/htmx.min.js" defer></script>
 </head>
 <body>
-    <nav class="main-nav">
-        <a href="/"><span class="icon" style="--icon-src:url('/static/icons/dashboard.svg')"></span>Dashboard</a>
-        <a href="/biens"><span class="icon" style="--icon-src:url('/static/icons/biens.svg')"></span>Biens</a>
-        <a href="/indivision"><span class="icon" style="--icon-src:url('/static/icons/indivision.svg')"></span>Indivision</a>
-        <a href="/investissements"><span class="icon" style="--icon-src:url('/static/icons/investissements.svg')"></span>Investissements</a>
-        <a href="/liquidites"><span class="icon" style="--icon-src:url('/static/icons/liquidites.svg')"></span>Liquidités</a>
-        <a href="/declaration"><span class="icon" style="--icon-src:url('/static/icons/declaration.svg')"></span>Déclaration</a>
-        <a href="/parametres"><span class="icon" style="--icon-src:url('/static/icons/parametres.svg')"></span>Paramètres</a>
-    </nav>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    <div class="app-shell">
+        <nav class="sidebar">
+            <div class="sidebar-brand"><span class="mark"></span>Patrimoine</div>
+            <a class="nav-item {% if request.url.path == '/' %}active{% endif %}" href="/">
+                <span class="icon" style="--icon-src:url('/static/icons/dashboard.svg')"></span>Dashboard
+            </a>
+            <a class="nav-item {% if request.url.path.startswith('/biens') %}active{% endif %}" href="/biens">
+                <span class="icon" style="--icon-src:url('/static/icons/biens.svg')"></span>Biens
+            </a>
+            <a class="nav-item {% if request.url.path.startswith('/indivision') %}active{% endif %}" href="/indivision">
+                <span class="icon" style="--icon-src:url('/static/icons/indivision.svg')"></span>Indivision
+            </a>
+            <a class="nav-item {% if request.url.path.startswith('/investissements') or request.url.path.startswith('/titres') %}active{% endif %}" href="/investissements">
+                <span class="icon" style="--icon-src:url('/static/icons/investissements.svg')"></span>Investissements
+            </a>
+            <a class="nav-item {% if request.url.path.startswith('/liquidites') %}active{% endif %}" href="/liquidites">
+                <span class="icon" style="--icon-src:url('/static/icons/liquidites.svg')"></span>Liquidités
+            </a>
+            <a class="nav-item {% if request.url.path.startswith('/declaration') %}active{% endif %}" href="/declaration">
+                <span class="icon" style="--icon-src:url('/static/icons/declaration.svg')"></span>Déclaration
+            </a>
+            <a class="nav-item {% if request.url.path.startswith('/parametres') %}active{% endif %}" href="/parametres">
+                <span class="icon" style="--icon-src:url('/static/icons/parametres.svg')"></span>Paramètres
+            </a>
+            <div class="sidebar-footer">Outil local — aucune donnée hors de cet appareil</div>
+        </nav>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 </body>
 </html>

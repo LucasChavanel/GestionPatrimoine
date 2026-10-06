@@ -16,8 +16,10 @@ Toutes les ressources tierces sont copiées dans le repo (`src/patrimoine/static
 
 - [htmx](https://htmx.org) (`js/htmx.min.js`) — BSD 2-Clause
 - [Chart.js](https://www.chartjs.org) (`js/chart.umd.min.js`) — MIT
-- [Pico CSS](https://picocss.com) v2.1.1 (`css/pico.min.css`) — MIT
 - [Tabler Icons](https://tabler.io/icons) (`icons/*.svg`) — MIT
+- [IBM Plex Sans / IBM Plex Mono](https://www.ibm.com/plex/) (`fonts/*.woff2`) — SIL Open Font License
+
+Design custom (`css/style.css`, nav latérale + cartes + formulaires en grille) — pas de framework CSS.
 
 ## Installation
 

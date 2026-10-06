@@ -1,6 +1,6 @@
-<p class="current-property"><a href="/investissements">← Tous les comptes</a> — <strong>{{ account.nom }}</strong></p>
-<nav class="sub-nav">
-    <a href="/investissements/{{ account.id }}">Fiche compte</a>
-    <a href="/investissements/{{ account.id }}/operations">Opérations</a>
-    <a href="/titres">Titres</a>
+<div class="breadcrumb"><a href="/investissements">← Tous les comptes</a> — <strong>{{ account.nom }}</strong></div>
+<nav class="tabs">
+    <a href="/investissements/{{ account.id }}" class="{% if request.url.path == '/investissements/' ~ account.id|string %}active{% endif %}">Fiche compte</a>
+    <a href="/investissements/{{ account.id }}/operations" class="{% if '/operations' in request.url.path %}active{% endif %}">Opérations</a>
+    <a href="/titres" class="{% if request.url.path == '/titres' %}active{% endif %}">Titres</a>
 </nav>

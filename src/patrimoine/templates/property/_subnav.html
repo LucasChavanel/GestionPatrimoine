@@ -1,11 +1,11 @@
-<p class="current-property"><a href="/biens">← Tous les biens</a> — <strong>{{ property_.nom }}</strong></p>
-<nav class="sub-nav">
-    <a href="/biens/{{ property_.id }}">Fiche bien</a>
-    <a href="/agences">Agences</a>
-    <a href="/biens/{{ property_.id }}/reservations">Réservations</a>
-    <a href="/biens/{{ property_.id }}/calendrier">Calendrier</a>
-    <a href="/biens/{{ property_.id }}/charges">Charges</a>
-    <a href="/biens/{{ property_.id }}/travaux">Travaux &amp; mobilier</a>
-    <a href="/biens/{{ property_.id }}/synthese">Synthèse</a>
-    <a href="/biens/{{ property_.id }}/simulateur">Simulateur fiscal</a>
+<div class="breadcrumb"><a href="/biens">← Tous les biens</a> — <strong>{{ property_.nom }}</strong></div>
+<nav class="tabs">
+    <a href="/biens/{{ property_.id }}" class="{% if request.url.path == '/biens/' ~ property_.id|string %}active{% endif %}">Fiche bien</a>
+    <a href="/agences" class="{% if request.url.path == '/agences' %}active{% endif %}">Agences</a>
+    <a href="/biens/{{ property_.id }}/reservations" class="{% if '/reservations' in request.url.path %}active{% endif %}">Réservations</a>
+    <a href="/biens/{{ property_.id }}/calendrier" class="{% if '/calendrier' in request.url.path %}active{% endif %}">Calendrier</a>
+    <a href="/biens/{{ property_.id }}/charges" class="{% if '/charges' in request.url.path %}active{% endif %}">Charges</a>
+    <a href="/biens/{{ property_.id }}/travaux" class="{% if '/travaux' in request.url.path %}active{% endif %}">Travaux &amp; mobilier</a>
+    <a href="/biens/{{ property_.id }}/synthese" class="{% if '/synthese' in request.url.path %}active{% endif %}">Synthèse</a>
+    <a href="/biens/{{ property_.id }}/simulateur" class="{% if '/simulateur' in request.url.path %}active{% endif %}">Simulateur fiscal</a>
 </nav>

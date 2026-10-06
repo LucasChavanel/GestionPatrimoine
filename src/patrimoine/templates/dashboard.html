@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Patrimoine{% endblock %}
 {% block content %}
-<h1>Dashboard</h1>
-<p class="disclaimer">Outil local — données hors du repo, aucune synchronisation cloud.</p>
+<div class="page-header">
+    <h1>Dashboard</h1>
+</div>
+<p class="page-subtitle">Outil local — aucune synchronisation cloud</p>
 
 {% if avertissements %}
 <ul class="warning">
@@ -12,92 +14,77 @@
 </ul>
 {% endif %}
 
-<section>
-    <h2>Patrimoine global</h2>
-    <section class="summary-cards">
-        <div class="card">
-            <h2>Actions</h2>
-            <p class="amount">{{ "%.2f"|format(consolide.valeur_actions) }} €</p>
-        </div>
-        <div class="card">
-            <h2>Cash</h2>
-            <p class="amount">{{ "%.2f"|format(consolide.valeur_cash) }} €</p>
-        </div>
-        <div class="card">
-            <h2>Immobilier</h2>
-            <p class="amount">{{ "%.2f"|format(consolide.valeur_immobilier) }} €</p>
-        </div>
-        <div class="card">
-            <h2>Or</h2>
-            <p class="amount">{{ "%.2f"|format(consolide.valeur_or) }} €</p>
-        </div>
-    </section>
-    <p><strong>Total : {{ "%.2f"|format(consolide.valeur_totale) }} €</strong></p>
+<p class="section-title">Patrimoine global</p>
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-label">Actions</div>
+        <p class="stat-value">{{ "%.2f"|format(consolide.valeur_actions) }} €</p>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Cash</div>
+        <p class="stat-value">{{ "%.2f"|format(consolide.valeur_cash) }} €</p>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Immobilier</div>
+        <p class="stat-value">{{ "%.2f"|format(consolide.valeur_immobilier) }} €</p>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Or</div>
+        <p class="stat-value">{{ "%.2f"|format(consolide.valeur_or) }} €</p>
+    </div>
+</div>
+<p><strong>Total : {{ "%.2f"|format(consolide.valeur_totale) }} €</strong></p>
 
-    {% if consolide.pct_us is not none %}
-    <h3>Exposition géographique estimée (sur la poche actions)</h3>
-    <p>
-        US : {{ "%.1f"|format(consolide.pct_us * 100) }} % —
-        Europe : {{ "%.1f"|format(consolide.pct_europe * 100) }} % —
-        Émergents : {{ "%.1f"|format(consolide.pct_emergents * 100) }} %
-    </p>
-    {% endif %}
+{% if consolide.pct_us is not none %}
+<p class="section-title">Exposition géographique estimée (sur la poche actions)</p>
+<div class="inline-stats">
+    <div class="inline-stat"><span class="k">US</span><span class="v">{{ "%.1f"|format(consolide.pct_us * 100) }} %</span></div>
+    <div class="inline-stat"><span class="k">Europe</span><span class="v">{{ "%.1f"|format(consolide.pct_europe * 100) }} %</span></div>
+    <div class="inline-stat"><span class="k">Émergents</span><span class="v">{{ "%.1f"|format(consolide.pct_emergents * 100) }} %</span></div>
+</div>
+{% endif %}
 
-    {% if historique|length > 1 %}
-    <div class="chart-container"><canvas id="chart-patrimoine"></canvas></div>
-    {% endif %}
-</section>
+{% if historique|length > 1 %}
+<p class="section-title">Historique de valeur</p>
+<div class="chart-container"><canvas id="chart-patrimoine"></canvas></div>
+{% endif %}
+
+<p class="section-title">Synthèse par bien — {{ annee }}</p>
 {% if resumes_par_bien %}
 {% for r in resumes_par_bien %}
-<h2><a href="/biens/{{ r.property_.id }}">{{ r.property_.nom }}</a></h2>
-<section class="summary-cards">
-    <div class="card">
-        <h2>Recettes {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(r.recettes_annee) }} €</p>
-    </div>
-    <div class="card">
-        <h2>Charges {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(r.charges_annee) }} €</p>
-    </div>
-    <div class="card">
-        <h2>Résultat {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(r.resultat_annee) }} €</p>
-    </div>
-</section>
+<div class="property-row">
+    <div class="name"><a href="/biens/{{ r.property_.id }}">{{ r.property_.nom }}</a></div>
+    <div class="metric"><span class="k">Recettes</span><span class="v">{{ "%.2f"|format(r.recettes_annee) }} €</span></div>
+    <div class="metric"><span class="k">Charges</span><span class="v">{{ "%.2f"|format(r.charges_annee) }} €</span></div>
+    <div class="metric"><span class="k">Résultat</span><span class="v"{% if r.resultat_annee < 0 %} style="color:var(--negative)"{% endif %}>{{ "%.2f"|format(r.resultat_annee) }} €</span></div>
+</div>
 {% endfor %}
 {% else %}
 <p>Aucun bien renseigné pour l'instant. <a href="/biens">Créer un bien</a>.</p>
 {% endif %}
 
-<section>
-    <h2>Prochaines réservations (tous biens)</h2>
-    {% if prochaines_reservations %}
-    <table>
-        <thead><tr><th>Bien</th><th>Arrivée</th><th>Départ</th><th>Plateforme</th><th>Net encaissé</th></tr></thead>
-        <tbody>
-        {% for b in prochaines_reservations %}
-            <tr>
-                <td>{{ b.property_.nom }}</td>
-                <td>{{ b.date_arrivee }}</td>
-                <td>{{ b.date_depart }}</td>
-                <td>{{ b.plateforme.value }}</td>
-                <td>{{ "%.2f"|format(b.net_encaisse) }} €</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>Aucune réservation à venir.</p>
-    {% endif %}
-</section>
+<p class="section-title">Prochaines réservations (tous biens)</p>
+{% if prochaines_reservations %}
+<table>
+    <thead><tr><th>Bien</th><th>Arrivée</th><th>Départ</th><th>Plateforme</th><th>Net encaissé</th></tr></thead>
+    <tbody>
+    {% for b in prochaines_reservations %}
+        <tr>
+            <td>{{ b.property_.nom }}</td>
+            <td>{{ b.date_arrivee }}</td>
+            <td>{{ b.date_depart }}</td>
+            <td>{{ b.plateforme.value }}</td>
+            <td>{{ "%.2f"|format(b.net_encaisse) }} €</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune réservation à venir.</p>
+{% endif %}
 
-<section>
-    <h2>Sauvegarde</h2>
-    <p>
-        Dernière sauvegarde :
-        {% if last_backup_at %}{{ last_backup_at }}{% else %}jamais effectuée{% endif %}
-    </p>
-</section>
+<p class="section-title">Sauvegarde</p>
+<p>Dernière sauvegarde : {% if last_backup_at %}{{ last_backup_at }}{% else %}jamais effectuée{% endif %}</p>
 
 {% if historique|length > 1 %}
 <script src="/static/js/chart.umd.min.js"></script>
@@ -110,11 +97,19 @@
             datasets: [{
                 label: 'Valeur totale (€)',
                 data: {{ historique | map(attribute='valeur_totale') | list | tojson }},
-                borderColor: '#2f5d50',
-                tension: 0.1,
+                borderColor: '#27553f',
+                backgroundColor: 'rgba(39,85,63,0.08)',
+                fill: true,
+                tension: 0.2,
+                pointRadius: 3,
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { ticks: { font: { family: 'IBM Plex Mono', size: 10 } } }, x: { ticks: { font: { size: 10 } } } },
+        }
     });
 </script>
 {% endif %}

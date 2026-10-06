@@ -2,10 +2,9 @@
 {% block title %}Synthèse — Patrimoine{% endblock %}
 {% block content %}
 {% include "property/_subnav.html" %}
-<h1>Synthèse annuelle</h1>
 <p class="disclaimer">Vue de rapprochement — montants bruts tels que saisis, pas un calcul fiscal (voir le Simulateur pour ça).</p>
 
-<form method="get" action="/biens/{{ property_.id }}/synthese">
+<form method="get" action="/biens/{{ property_.id }}/synthese" style="max-width: 160px; margin: 1rem 0;">
     <label>Année
         <select name="annee" onchange="this.form.submit()">
             {% for a in annees_disponibles %}
@@ -15,22 +14,22 @@
     </label>
 </form>
 
-<section class="summary-cards">
-    <div class="card">
-        <h2>Recettes {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(result.recettes_annee) }} €</p>
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-label">Recettes {{ annee }}</div>
+        <p class="stat-value">{{ "%.2f"|format(result.recettes_annee) }} €</p>
     </div>
-    <div class="card">
-        <h2>Charges {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(result.total_charges_annee) }} €</p>
+    <div class="stat-card">
+        <div class="stat-label">Charges {{ annee }}</div>
+        <p class="stat-value">{{ "%.2f"|format(result.total_charges_annee) }} €</p>
     </div>
-    <div class="card">
-        <h2>Résultat {{ annee }}</h2>
-        <p class="amount">{{ "%.2f"|format(result.recettes_annee - result.total_charges_annee) }} €</p>
+    <div class="stat-card">
+        <div class="stat-label">Résultat {{ annee }}</div>
+        <p class="stat-value">{{ "%.2f"|format(result.recettes_annee - result.total_charges_annee) }} €</p>
     </div>
-</section>
+</div>
 
-<h2>Charges par catégorie {{ annee }}</h2>
+<p class="section-title">Charges par catégorie {{ annee }}</p>
 {% if result.charges_par_categorie %}
 <table>
     <thead><tr><th>Catégorie</th><th>Montant</th></tr></thead>
@@ -44,7 +43,7 @@
 <p>Aucune charge pour {{ annee }}.</p>
 {% endif %}
 
-<h2>Autres indicateurs</h2>
+<p class="section-title">Autres indicateurs</p>
 <table>
     <tbody>
         <tr><td>Part récupérable auprès du locataire ({{ annee }})</td><td>{{ "%.2f"|format(result.total_recuperable_annee) }} €</td></tr>
@@ -53,5 +52,5 @@
         <tr><td>Cumul des amortissements pratiqués depuis le début</td><td>{{ "%.2f"|format(result.cumul_amortissements_pratiques) }} €</td></tr>
     </tbody>
 </table>
-<p>Le fonds de travaux cumulé n'est pas réduit d'éventuels travaux déjà financés par ce fonds (non suivi par l'outil) — à rapprocher du solde annoncé par le syndic.</p>
+<p class="page-subtitle">Le fonds de travaux cumulé n'est pas réduit d'éventuels travaux déjà financés par ce fonds (non suivi par l'outil) — à rapprocher du solde annoncé par le syndic.</p>
 {% endblock %}

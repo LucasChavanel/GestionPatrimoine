@@ -2,31 +2,34 @@
 {% block title %}{{ account.nom }} — Patrimoine{% endblock %}
 {% block content %}
 {% include "investments/_subnav.html" %}
-<h1>Fiche compte</h1>
 
-<section>
-    <h2>Informations générales</h2>
+<div class="card">
+    <div class="card-header"><h2>Informations générales</h2></div>
     <form method="post" action="/investissements/{{ account.id }}">
-        <label>Nom <input type="text" name="nom" value="{{ account.nom }}" required></label>
-        <label>Type
-            <select name="type_enveloppe">
-                {% for t in ["pea", "cto", "autre"] %}
-                <option value="{{ t }}" {% if account.type.value == t %}selected{% endif %}>{{ t }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <label>Courtier
-            <select name="courtier">
-                {% for c in ["trade_republic", "ibkr", "autre"] %}
-                <option value="{{ c }}" {% if account.courtier.value == c %}selected{% endif %}>{{ c }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <label>Devise de base <input type="text" name="devise_base" value="{{ account.devise_base }}"></label>
-        <label>Date d'ouverture <input type="date" name="date_ouverture" value="{{ account.date_ouverture if account.date_ouverture else '' }}"></label>
-        <button type="submit">Enregistrer</button>
+        <div class="card-body">
+            <div class="field-grid">
+                <div class="field span-2"><label>Nom</label><input type="text" name="nom" value="{{ account.nom }}" required></div>
+                <div class="field"><label>Devise de base</label><input type="text" name="devise_base" value="{{ account.devise_base }}"></div>
+                <div class="field"><label>Type</label>
+                    <select name="type_enveloppe">
+                        {% for t in ["pea", "cto", "autre"] %}
+                        <option value="{{ t }}" {% if account.type.value == t %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field"><label>Courtier</label>
+                    <select name="courtier">
+                        {% for c in ["trade_republic", "ibkr", "autre"] %}
+                        <option value="{{ c }}" {% if account.courtier.value == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field"><label>Date d'ouverture</label><input type="date" name="date_ouverture" value="{{ account.date_ouverture if account.date_ouverture else '' }}"></div>
+            </div>
+        </div>
+        <div class="card-footer"><button type="submit">Enregistrer</button></div>
     </form>
-</section>
+</div>
 
 {% if ibkr_resultat %}
 <p>{{ ibkr_resultat }}</p>
@@ -36,84 +39,91 @@
 {% endif %}
 
 {% if account.courtier.value == "ibkr" %}
-<section>
-    <h2>Synchronisation IBKR</h2>
-    <p>
-        À faire une seule fois, avant la première synchronisation régulière — importe les positions
-        actuelles telles que rapportées par IBKR (quantité + prix de revient moyen), sans historique
-        de trades (non disponible pour les positions déjà existantes).
-    </p>
-    <form method="post" action="/investissements/{{ account.id }}/ibkr/solde-ouverture">
-        <button type="submit">Importer le solde d'ouverture depuis IBKR</button>
-    </form>
-    <p>À recliquer à volonté — importe les nouvelles opérations (dépôts, dividendes, trades...) depuis la dernière synchronisation.</p>
-    <form method="post" action="/investissements/{{ account.id }}/ibkr/synchroniser">
-        <button type="submit">Synchroniser les opérations IBKR</button>
-    </form>
-</section>
+<div class="card">
+    <div class="card-header"><h2>Synchronisation IBKR</h2></div>
+    <div class="card-body">
+        <p style="margin-top:0">
+            À faire une seule fois, avant la première synchronisation régulière — importe les positions
+            actuelles telles que rapportées par IBKR (quantité + prix de revient moyen), sans historique
+            de trades (non disponible pour les positions déjà existantes).
+        </p>
+        <form method="post" action="/investissements/{{ account.id }}/ibkr/solde-ouverture" style="display:inline">
+            <button type="submit" class="secondary">Importer le solde d'ouverture depuis IBKR</button>
+        </form>
+        <p>À recliquer à volonté — importe les nouvelles opérations (dépôts, dividendes, trades...) depuis la dernière synchronisation.</p>
+        <form method="post" action="/investissements/{{ account.id }}/ibkr/synchroniser" style="display:inline">
+            <button type="submit">Synchroniser les opérations IBKR</button>
+        </form>
+    </div>
+</div>
 {% endif %}
 
 {% if suivi_pea %}
-<section>
-    <h2>Suivi PEA</h2>
-    <p>
-        Versements cumulés : {{ "%.2f"|format(suivi_pea.versements_cumules) }} € / plafond {{ "%.0f"|format(suivi_pea.plafond) }} €
-        — marge disponible : {{ "%.2f"|format(suivi_pea.marge_disponible) }} €
-    </p>
-    {% if suivi_pea.marge_disponible < 0 %}
-    <p class="warning">⚠️ Plafond de versements dépassé.</p>
-    {% endif %}
-    {% if suivi_pea.anciennete_annees is not none %}
-    <p>
-        Ancienneté : {{ "%.1f"|format(suivi_pea.anciennete_annees) }} ans
-        {% if suivi_pea.anciennete_suffisante == false %}
-        <span class="warning">⚠️ moins de 5 ans — un retrait ferait perdre l'avantage fiscal du PEA.</span>
+<div class="card">
+    <div class="card-header"><h2>Suivi PEA</h2></div>
+    <div class="card-body">
+        <div class="inline-stats" style="margin-bottom: 0.5rem;">
+            <div class="inline-stat"><span class="k">Versements cumulés</span><span class="v">{{ "%.2f"|format(suivi_pea.versements_cumules) }} €</span></div>
+            <div class="inline-stat"><span class="k">Plafond</span><span class="v">{{ "%.0f"|format(suivi_pea.plafond) }} €</span></div>
+            <div class="inline-stat"><span class="k">Marge disponible</span><span class="v"{% if suivi_pea.marge_disponible < 0 %} style="color:var(--negative)"{% endif %}>{{ "%.2f"|format(suivi_pea.marge_disponible) }} €</span></div>
+            {% if suivi_pea.anciennete_annees is not none %}
+            <div class="inline-stat"><span class="k">Ancienneté</span><span class="v">{{ "%.1f"|format(suivi_pea.anciennete_annees) }} ans</span></div>
+            {% endif %}
+        </div>
+        {% if suivi_pea.marge_disponible < 0 %}
+        <p class="warning">⚠️ Plafond de versements dépassé.</p>
         {% endif %}
-    </p>
-    {% endif %}
-</section>
+        {% if suivi_pea.anciennete_annees is not none and suivi_pea.anciennete_suffisante == false %}
+        <p class="warning">⚠️ Moins de 5 ans — un retrait ferait perdre l'avantage fiscal du PEA.</p>
+        {% endif %}
+    </div>
+</div>
 {% endif %}
 
 {% if allocation %}
-<section>
-    <h2>Allocation World / Europe</h2>
-    <p>
-        World : {{ "%.2f"|format(allocation.valeur_world) }} € —
-        Europe : {{ "%.2f"|format(allocation.valeur_europe) }} €
-        {% if allocation.valeur_autre %}— Autre : {{ "%.2f"|format(allocation.valeur_autre) }} €{% endif %}
-    </p>
-    {% if allocation.pct_europe is not none %}
-    <p>Part Europe : {{ "%.1f"|format(allocation.pct_europe * 100) }} %</p>
-    {% if allocation.hors_bande %}
-    <p class="warning">⚠️ Allocation Europe hors de la bande cible (15–25 %) — rééquilibrage à envisager.</p>
-    {% endif %}
-    {% endif %}
-</section>
+<div class="card">
+    <div class="card-header"><h2>Allocation World / Europe</h2></div>
+    <div class="card-body">
+        <div class="inline-stats" style="margin-bottom: 0.5rem;">
+            <div class="inline-stat"><span class="k">World</span><span class="v">{{ "%.2f"|format(allocation.valeur_world) }} €</span></div>
+            <div class="inline-stat"><span class="k">Europe</span><span class="v">{{ "%.2f"|format(allocation.valeur_europe) }} €</span></div>
+            {% if allocation.valeur_autre %}
+            <div class="inline-stat"><span class="k">Autre</span><span class="v">{{ "%.2f"|format(allocation.valeur_autre) }} €</span></div>
+            {% endif %}
+            {% if allocation.pct_europe is not none %}
+            <div class="inline-stat"><span class="k">Part Europe</span><span class="v">{{ "%.1f"|format(allocation.pct_europe * 100) }} %</span></div>
+            {% endif %}
+        </div>
+        {% if allocation.hors_bande %}
+        <p class="warning">⚠️ Allocation Europe hors de la bande cible (15–25 %) — rééquilibrage à envisager.</p>
+        {% endif %}
+    </div>
+</div>
 {% endif %}
 
-<section>
+<div class="section-header">
     <h2>Positions</h2>
     <form method="post" action="/investissements/{{ account.id }}/rafraichir-cours">
-        <button type="submit">Rafraîchir les cours (Yahoo Finance)</button>
+        <button type="submit" class="secondary">Rafraîchir les cours (Yahoo Finance)</button>
     </form>
-    {% if positions %}
-    <table>
-        <thead><tr><th>Titre</th><th>ISIN</th><th>Quantité détenue</th><th>PRMP</th><th>Montant investi</th><th>Dernier cours</th></tr></thead>
-        <tbody>
-        {% for p in positions %}
-            <tr>
-                <td>{{ p.security.nom }}</td>
-                <td>{{ p.security.isin }}</td>
-                <td>{{ p.quantite_detenue }}</td>
-                <td>{{ "%.4f"|format(p.prmp) }} {{ account.devise_base }}</td>
-                <td>{{ "%.2f"|format(p.montant_investi) }} {{ account.devise_base }}</td>
-                <td>{% if p.security.dernier_cours %}{{ p.security.dernier_cours }} {{ p.security.dernier_cours_devise or "" }} ({{ p.security.dernier_cours_date }}){% else %}—{% endif %}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>Aucune position détenue sur ce compte.</p>
-    {% endif %}
-</section>
+</div>
+{% if positions %}
+<table>
+    <thead><tr><th>Titre</th><th>ISIN</th><th>Quantité détenue</th><th>PRMP</th><th>Montant investi</th><th>Dernier cours</th></tr></thead>
+    <tbody>
+    {% for p in positions %}
+        <tr>
+            <td>{{ p.security.nom }}</td>
+            <td>{{ p.security.isin }}</td>
+            <td>{{ p.quantite_detenue }}</td>
+            <td>{{ "%.4f"|format(p.prmp) }} {{ account.devise_base }}</td>
+            <td>{{ "%.2f"|format(p.montant_investi) }} {{ account.devise_base }}</td>
+            <td>{% if p.security.dernier_cours %}{{ p.security.dernier_cours }} {{ p.security.dernier_cours_devise or "" }} ({{ p.security.dernier_cours_date }}){% else %}—{% endif %}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune position détenue sur ce compte.</p>
+{% endif %}
 {% endblock %}
