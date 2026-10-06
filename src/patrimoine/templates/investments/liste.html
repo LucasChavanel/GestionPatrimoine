@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Investissements — Patrimoine{% endblock %}
 {% block content %}
-<h1>Investissements</h1>
+<div class="section-header">
+    <h1 style="margin:0">Investissements</h1>
+    <button onclick="document.getElementById('dialog-compte').showModal()">+ Ajouter un compte</button>
+</div>
 
 {% if accounts %}
 <table>
@@ -22,25 +25,32 @@
 <p>Aucun compte d'investissement renseigné pour l'instant.</p>
 {% endif %}
 
-<h2>Ajouter un compte</h2>
-<form method="post" action="/investissements">
-    <label>Nom <input type="text" name="nom" required></label>
-    <label>Type
-        <select name="type_enveloppe">
-            {% for t in types_enveloppe %}
-            <option value="{{ t.value }}">{{ t.value }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    <label>Courtier
-        <select name="courtier">
-            {% for c in courtiers %}
-            <option value="{{ c.value }}">{{ c.value }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    <label>Devise de base <input type="text" name="devise_base" value="EUR"></label>
-    <label>Date d'ouverture <input type="date" name="date_ouverture"></label>
-    <button type="submit">Créer le compte</button>
-</form>
+<dialog id="dialog-compte">
+    <article>
+        <h3>Ajouter un compte</h3>
+        <form method="post" action="/investissements">
+            <label>Nom <input type="text" name="nom" required></label>
+            <label>Type
+                <select name="type_enveloppe">
+                    {% for t in types_enveloppe %}
+                    <option value="{{ t.value }}">{{ t.value }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Courtier
+                <select name="courtier">
+                    {% for c in courtiers %}
+                    <option value="{{ c.value }}">{{ c.value }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Devise de base <input type="text" name="devise_base" value="EUR"></label>
+            <label>Date d'ouverture <input type="date" name="date_ouverture"></label>
+            <footer>
+                <button type="button" class="secondary" onclick="document.getElementById('dialog-compte').close()">Annuler</button>
+                <button type="submit">Créer le compte</button>
+            </footer>
+        </form>
+    </article>
+</dialog>
 {% endblock %}
