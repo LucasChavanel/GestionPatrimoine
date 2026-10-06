@@ -4,9 +4,18 @@
 <h1>Titres</h1>
 <p>Référentiel des titres (ISIN unique), partagé par tous les comptes d'investissement.</p>
 
+{% if resultat %}
+<p>{{ resultat }}</p>
+{% endif %}
+
 <div class="section-header">
     <h2>Liste</h2>
-    <button onclick="document.getElementById('dialog-titre').showModal()">+ Ajouter</button>
+    <span>
+        <form method="post" action="/titres/rafraichir-tout" style="display:inline">
+            <button type="submit" class="secondary">Rafraîchir tous les cours</button>
+        </form>
+        <button onclick="document.getElementById('dialog-titre').showModal()">+ Ajouter</button>
+    </span>
 </div>
 {% if securities %}
 <table>

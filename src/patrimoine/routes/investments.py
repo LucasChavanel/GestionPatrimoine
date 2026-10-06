@@ -11,10 +11,10 @@ from ..models.enums import Courtier, EnvelopeType, TypeTransaction
 from ..models.investment_account import InvestmentAccount
 from ..models.investment_transaction import InvestmentTransaction
 from ..models.security import Security
-from ..services import ibkr_flex
 from ..services.allocation import compute_allocation
 from ..services.ibkr_credentials import get_credentials
-from ..services.market_data import fetch_price
+from ..services.ibkr_sync import sync_operations, sync_solde_ouverture
+from ..services.market_data import refresh_all_prices
 from ..services.pea import compute_suivi_pea
 from ..services.positions import compute_positions
 
@@ -77,6 +77,7 @@ def _fiche_context(session: Session, account: InvestmentAccount, **extra) -> dic
         "allocation": allocation,
         "ibkr_resultat": None,
         "ibkr_erreur": None,
+        "cours_resultat": None,
         **extra,
     }
 
@@ -92,23 +93,16 @@ def fiche(
 
 @router_compte.post("/rafraichir-cours")
 def rafraichir_cours(
-    account_id: int,
+    request: Request,
     session: Session = Depends(get_session),
     account: InvestmentAccount = Depends(get_account_or_404),
 ):
-    positions = compute_positions(session, account.id)
-    for position in positions:
-        security = position.security
-        if not security.ticker_yahoo:
-            continue
-        prix = fetch_price(security.ticker_yahoo)
-        if prix is not None:
-            security.dernier_cours = prix.prix
-            security.dernier_cours_devise = prix.devise
-            security.dernier_cours_date = date.today()
-            session.add(security)
-    session.commit()
-    return RedirectResponse(url=f"/investissements/{account_id}", status_code=303)
+    r = refresh_all_prices(session)
+    resultat = f"{r.mis_a_jour} cours mis à jour, {r.echecs} échec(s)."
+    if r.sans_ticker:
+        resultat += f" {r.sans_ticker} titre(s) sans ticker Yahoo renseigné (voir /titres)."
+    context = _fiche_context(session, account, cours_resultat=resultat)
+    return templates.TemplateResponse(request, "investments/fiche.html", context)
 
 
 @router_compte.post("")
@@ -132,102 +126,20 @@ def enregistrer(
     return RedirectResponse(url=f"/investissements/{account_id}", status_code=303)
 
 
-def _get_or_create_security(session: Session, isin: str, nom: str) -> Security | None:
-    if not isin:
-        return None
-    security = session.exec(select(Security).where(Security.isin == isin)).first()
-    if security is None:
-        security = Security(isin=isin, nom=nom or isin)
-        session.add(security)
-        session.commit()
-        session.refresh(security)
-    return security
-
-
-def _transaction_existe(session: Session, account_id: int, external_id: str) -> bool:
-    existing = session.exec(
-        select(InvestmentTransaction)
-        .where(InvestmentTransaction.account_id == account_id)
-        .where(InvestmentTransaction.external_id == external_id)
-    ).first()
-    return existing is not None
-
-
 @router_compte.post("/ibkr/solde-ouverture")
 def ibkr_solde_ouverture(
     request: Request,
     session: Session = Depends(get_session),
     account: InvestmentAccount = Depends(get_account_or_404),
 ):
-    creds = get_credentials()
-    if not creds.token or not creds.query_id:
-        context = _fiche_context(
-            session, account, ibkr_erreur="Identifiants IBKR non configurés (voir /parametres)."
-        )
+    r = sync_solde_ouverture(session, account, get_credentials())
+    if r.erreur:
+        context = _fiche_context(session, account, ibkr_erreur=r.erreur)
         return templates.TemplateResponse(request, "investments/fiche.html", context)
 
-    try:
-        xml_text = ibkr_flex.fetch_report(creds.token, creds.query_id)
-    except ibkr_flex.IbkrFlexError as exc:
-        context = _fiche_context(session, account, ibkr_erreur=str(exc))
-        return templates.TemplateResponse(request, "investments/fiche.html", context)
-
-    positions = ibkr_flex.parse_open_positions(xml_text)
-    importees = 0
-    deja_presentes = 0
-    depots_corriges = 0
-    for position in positions:
-        external_id = f"ibkr-position-{position.conid}"
-        depot_external_id = f"ibkr-depot-ouverture-{position.conid}"
-        montant = position.quantite * position.prix_moyen
-
-        achat_existe = _transaction_existe(session, account.id, external_id)
-        if not achat_existe:
-            security = _get_or_create_security(session, position.isin, position.symbol)
-            session.add(
-                InvestmentTransaction(
-                    account_id=account.id,
-                    security_id=security.id if security else None,
-                    date=date.today(),
-                    type=TypeTransaction.achat,
-                    quantite=position.quantite,
-                    prix_unitaire=position.prix_moyen,
-                    devise=position.devise,
-                    frais=0.0,
-                    montant=montant,
-                    description="Import IBKR — solde d'ouverture",
-                    external_id=external_id,
-                )
-            )
-            importees += 1
-        else:
-            deja_presentes += 1
-
-        # Dépôt synthétique de même montant : l'historique réel des versements
-        # qui ont financé cette position n'est pas récupérable via Flex, donc
-        # sans cette ligne l'achat ferait passer le cash calculé
-        # (services/patrimoine_global.py::cash_disponible) largement négatif —
-        # un solde d'ouverture n'est pas un découvert. Backfill si l'achat a
-        # été importé avant ce correctif (pas de doublon, clé externe dédiée).
-        if not _transaction_existe(session, account.id, depot_external_id):
-            session.add(
-                InvestmentTransaction(
-                    account_id=account.id,
-                    date=date.today(),
-                    type=TypeTransaction.depot,
-                    devise=position.devise,
-                    montant=montant,
-                    description="Import IBKR — dépôt synthétique associé au solde d'ouverture",
-                    external_id=depot_external_id,
-                )
-            )
-            if achat_existe:
-                depots_corriges += 1
-    session.commit()
-
-    resultat = f"{importees} position(s) importée(s), {deja_presentes} déjà présente(s) (ignorée(s))."
-    if depots_corriges:
-        resultat += f" {depots_corriges} dépôt(s) d'ouverture manquant(s) corrigé(s) rétroactivement."
+    resultat = f"{r.importees} position(s) importée(s), {r.deja_presentes} déjà présente(s) (ignorée(s))."
+    if r.depots_corriges:
+        resultat += f" {r.depots_corriges} dépôt(s) d'ouverture manquant(s) corrigé(s) rétroactivement."
     context = _fiche_context(session, account, ibkr_resultat=resultat)
     return templates.TemplateResponse(request, "investments/fiche.html", context)
 
@@ -238,72 +150,14 @@ def ibkr_synchroniser(
     session: Session = Depends(get_session),
     account: InvestmentAccount = Depends(get_account_or_404),
 ):
-    creds = get_credentials()
-    if not creds.token or not creds.query_id:
-        context = _fiche_context(
-            session, account, ibkr_erreur="Identifiants IBKR non configurés (voir /parametres)."
-        )
+    r = sync_operations(session, account, get_credentials())
+    if r.erreur:
+        context = _fiche_context(session, account, ibkr_erreur=r.erreur)
         return templates.TemplateResponse(request, "investments/fiche.html", context)
 
-    try:
-        xml_text = ibkr_flex.fetch_report(creds.token, creds.query_id)
-    except ibkr_flex.IbkrFlexError as exc:
-        context = _fiche_context(session, account, ibkr_erreur=str(exc))
-        return templates.TemplateResponse(request, "investments/fiche.html", context)
-
-    importees = 0
-    deja_presentes = 0
-    types_ignores: dict[str, int] = {}
-
-    for cash_tx in ibkr_flex.parse_cash_transactions(xml_text):
-        external_id = f"ibkr-{cash_tx.transaction_id}"
-        if _transaction_existe(session, account.id, external_id):
-            deja_presentes += 1
-            continue
-        type_mappe = ibkr_flex.map_cash_transaction_type(cash_tx.type_brut, cash_tx.montant)
-        if type_mappe is None:
-            types_ignores[cash_tx.type_brut] = types_ignores.get(cash_tx.type_brut, 0) + 1
-            continue
-        transaction = InvestmentTransaction(
-            account_id=account.id,
-            security_id=None,
-            date=cash_tx.date,
-            type=type_mappe,
-            devise=cash_tx.devise,
-            montant=abs(cash_tx.montant),
-            description=cash_tx.description or f"Import IBKR — {cash_tx.type_brut}",
-            external_id=external_id,
-        )
-        session.add(transaction)
-        importees += 1
-
-    for trade in ibkr_flex.parse_trades(xml_text):
-        external_id = f"ibkr-{trade.trade_id}"
-        if _transaction_existe(session, account.id, external_id):
-            deja_presentes += 1
-            continue
-        security = _get_or_create_security(session, trade.isin, trade.symbol)
-        transaction = InvestmentTransaction(
-            account_id=account.id,
-            security_id=security.id if security else None,
-            date=trade.date,
-            type=TypeTransaction.achat if trade.achat else TypeTransaction.vente,
-            quantite=trade.quantite,
-            prix_unitaire=trade.prix,
-            devise=trade.devise,
-            frais=trade.frais,
-            montant=trade.quantite * trade.prix,
-            description="Import IBKR — trade",
-            external_id=external_id,
-        )
-        session.add(transaction)
-        importees += 1
-
-    session.commit()
-
-    resultat = f"{importees} opération(s) importée(s), {deja_presentes} déjà présente(s) (ignorée(s))."
-    if types_ignores:
-        detail = ", ".join(f"{t} (x{n})" for t, n in types_ignores.items())
+    resultat = f"{r.importees} opération(s) importée(s), {r.deja_presentes} déjà présente(s) (ignorée(s))."
+    if r.types_ignores:
+        detail = ", ".join(f"{t} (x{n})" for t, n in r.types_ignores.items())
         resultat += f" Types IBKR non gérés ignorés : {detail}."
     context = _fiche_context(session, account, ibkr_resultat=resultat)
     return templates.TemplateResponse(request, "investments/fiche.html", context)
