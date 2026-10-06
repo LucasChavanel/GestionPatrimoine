@@ -18,7 +18,7 @@
 </ul>
 {% endif %}
 
-<p>{{ "Loyers" if famille == "foncier" else "Recettes" }} {{ annee }} : <strong>{{ "%.2f"|format(result.recettes) }} €</strong></p>
+<p>{{ "Loyers" if famille == "foncier" else "Recettes" }} {{ annee }} : <strong>{{ result.recettes|montant }} €</strong></p>
 
 {% if famille == "lmnp" %}
 <table>
@@ -41,46 +41,46 @@
             <td>Abattement / charges déductibles</td>
             <td>{{ (result.micro_non_classe.abattement_pct * 100)|round(0) }} %</td>
             <td>{{ (result.micro_classe.abattement_pct * 100)|round(0) }} %</td>
-            <td>{{ "%.2f"|format(result.reel.charges_deductibles) }} €</td>
+            <td>{{ result.reel.charges_deductibles|montant }} €</td>
         </tr>
         <tr>
             <td>Amortissements déduits</td>
             <td>—</td>
             <td>—</td>
-            <td>{{ "%.2f"|format(result.reel.amortissements_deduits_annee) }} €</td>
+            <td>{{ result.reel.amortissements_deduits_annee|montant }} €</td>
         </tr>
         <tr>
             <td>Revenu / résultat imposable estimé</td>
-            <td>{{ "%.2f"|format(result.micro_non_classe.revenu_imposable) }} €</td>
-            <td>{{ "%.2f"|format(result.micro_classe.revenu_imposable) }} €</td>
-            <td>{{ "%.2f"|format(result.reel.resultat_imposable) }} €</td>
+            <td>{{ result.micro_non_classe.revenu_imposable|montant }} €</td>
+            <td>{{ result.micro_classe.revenu_imposable|montant }} €</td>
+            <td>{{ result.reel.resultat_imposable|montant }} €</td>
         </tr>
         <tr>
             <td>Impôt estimé (TMI {{ tmi_pct }} %)</td>
-            <td>{{ "%.2f"|format(result.micro_non_classe.impot_estime) }} €</td>
-            <td>{{ "%.2f"|format(result.micro_classe.impot_estime) }} €</td>
-            <td>{{ "%.2f"|format(result.reel.impot_estime) }} €</td>
+            <td>{{ result.micro_non_classe.impot_estime|montant }} €</td>
+            <td>{{ result.micro_classe.impot_estime|montant }} €</td>
+            <td>{{ result.reel.impot_estime|montant }} €</td>
         </tr>
         <tr>
             <td>Prélèvements sociaux estimés</td>
-            <td>{{ "%.2f"|format(result.micro_non_classe.prelevements_sociaux_estimes) }} €</td>
-            <td>{{ "%.2f"|format(result.micro_classe.prelevements_sociaux_estimes) }} €</td>
-            <td>{{ "%.2f"|format(result.reel.prelevements_sociaux_estimes) }} €</td>
+            <td>{{ result.micro_non_classe.prelevements_sociaux_estimes|montant }} €</td>
+            <td>{{ result.micro_classe.prelevements_sociaux_estimes|montant }} €</td>
+            <td>{{ result.reel.prelevements_sociaux_estimes|montant }} €</td>
         </tr>
         <tr>
             <td><strong>Total estimé</strong></td>
-            <td><strong>{{ "%.2f"|format(result.micro_non_classe.total_estime) }} €</strong></td>
-            <td><strong>{{ "%.2f"|format(result.micro_classe.total_estime) }} €</strong></td>
-            <td><strong>{{ "%.2f"|format(result.reel.total_estime) }} €</strong></td>
+            <td><strong>{{ result.micro_non_classe.total_estime|montant }} €</strong></td>
+            <td><strong>{{ result.micro_classe.total_estime|montant }} €</strong></td>
+            <td><strong>{{ result.reel.total_estime|montant }} €</strong></td>
         </tr>
     </tbody>
 </table>
 
 <h2>Détail réel simplifié</h2>
 <ul>
-    <li>Déficit restant reportable (10 ans max) : {{ "%.2f"|format(result.reel.deficit_restant_report) }} €</li>
-    <li>Amortissements non déduits reportables (sans limite de durée) : {{ "%.2f"|format(result.reel.amortissements_non_deduits_report) }} €</li>
-    <li>Cumul des amortissements pratiqués depuis le début (réintégrés dans la plus-value à la revente, réforme 2025) : {{ "%.2f"|format(result.reel.cumul_amortissements_pratiques) }} €</li>
+    <li>Déficit restant reportable (10 ans max) : {{ result.reel.deficit_restant_report|montant }} €</li>
+    <li>Amortissements non déduits reportables (sans limite de durée) : {{ result.reel.amortissements_non_deduits_report|montant }} €</li>
+    <li>Cumul des amortissements pratiqués depuis le début (réintégrés dans la plus-value à la revente, réforme 2025) : {{ result.reel.cumul_amortissements_pratiques|montant }} €</li>
 </ul>
 <p>Le régime réel implique une liasse fiscale, en général établie par un expert-comptable ou un service spécialisé ; ce coût est lui-même une charge déductible.</p>
 
@@ -102,40 +102,40 @@
         <tr>
             <td>Abattement / charges déductibles (hors intérêts)</td>
             <td>{{ (result.micro_foncier.abattement_pct * 100)|round(0) }} %</td>
-            <td>{{ "%.2f"|format(result.reel.charges_deductibles_hors_interets) }} €</td>
+            <td>{{ result.reel.charges_deductibles_hors_interets|montant }} €</td>
         </tr>
         <tr>
             <td>Intérêts d'emprunt déduits</td>
             <td>—</td>
-            <td>{{ "%.2f"|format(result.reel.interets_emprunt) }} €</td>
+            <td>{{ result.reel.interets_emprunt|montant }} €</td>
         </tr>
         <tr>
             <td>Revenu / résultat imposable estimé</td>
-            <td>{{ "%.2f"|format(result.micro_foncier.revenu_imposable) }} €</td>
-            <td>{{ "%.2f"|format(result.reel.resultat_imposable) }} €</td>
+            <td>{{ result.micro_foncier.revenu_imposable|montant }} €</td>
+            <td>{{ result.reel.resultat_imposable|montant }} €</td>
         </tr>
         <tr>
             <td>Impôt estimé (TMI {{ tmi_pct }} %)</td>
-            <td>{{ "%.2f"|format(result.micro_foncier.impot_estime) }} €</td>
-            <td>{{ "%.2f"|format(result.reel.impot_estime) }} €</td>
+            <td>{{ result.micro_foncier.impot_estime|montant }} €</td>
+            <td>{{ result.reel.impot_estime|montant }} €</td>
         </tr>
         <tr>
             <td>Prélèvements sociaux estimés</td>
-            <td>{{ "%.2f"|format(result.micro_foncier.prelevements_sociaux_estimes) }} €</td>
-            <td>{{ "%.2f"|format(result.reel.prelevements_sociaux_estimes) }} €</td>
+            <td>{{ result.micro_foncier.prelevements_sociaux_estimes|montant }} €</td>
+            <td>{{ result.reel.prelevements_sociaux_estimes|montant }} €</td>
         </tr>
         <tr>
             <td><strong>Total estimé</strong></td>
-            <td><strong>{{ "%.2f"|format(result.micro_foncier.total_estime) }} €</strong></td>
-            <td><strong>{{ "%.2f"|format(result.reel.total_estime) }} €</strong></td>
+            <td><strong>{{ result.micro_foncier.total_estime|montant }} €</strong></td>
+            <td><strong>{{ result.reel.total_estime|montant }} €</strong></td>
         </tr>
     </tbody>
 </table>
 
 <h2>Détail foncier réel</h2>
 <ul>
-    <li>Déficit imputable sur le revenu global cette année (hors de ce calcul foncier) : {{ "%.2f"|format(result.reel.deficit_imputable_revenu_global) }} €</li>
-    <li>Déficit restant reportable sur les revenus fonciers (10 ans max) : {{ "%.2f"|format(result.reel.deficit_restant_report_fonciers) }} €</li>
+    <li>Déficit imputable sur le revenu global cette année (hors de ce calcul foncier) : {{ result.reel.deficit_imputable_revenu_global|montant }} €</li>
+    <li>Déficit restant reportable sur les revenus fonciers (10 ans max) : {{ result.reel.deficit_restant_report_fonciers|montant }} €</li>
 </ul>
 <p>Le déficit imputable sur le revenu global ne concerne jamais la part liée aux intérêts d'emprunt — celle-ci n'est reportable que sur de futurs revenus fonciers.</p>
 {% endif %}

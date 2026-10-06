@@ -30,7 +30,7 @@ viennent de sites tiers, pas de la documentation officielle DGFiP, à confirmer 
             <td>{{ l.regime }}</td>
             <td>{{ l.case or "—" }}</td>
             <td>{{ l.libelle }}</td>
-            <td>{{ "%.2f"|format(l.montant) }} €</td>
+            <td>{{ l.montant|montant }} €</td>
         </tr>
     {% endfor %}
     </tbody>
@@ -41,9 +41,9 @@ viennent de sites tiers, pas de la documentation officielle DGFiP, à confirmer 
 
 <p class="section-title">Investissements (CTO)</p>
 <div class="inline-stats">
-    <div class="inline-stat"><span class="k">Plus-value {{ annee }} (case {{ recap.case_plus_value or "—" }})</span><span class="v">{{ "%.2f"|format(recap.plus_value_cto.plus_value_annee) }} €</span></div>
-    <div class="inline-stat"><span class="k">Dividendes bruts (case {{ recap.case_dividendes or "—" }})</span><span class="v">{{ "%.2f"|format(recap.dividendes_cto.dividendes_bruts) }} €</span></div>
-    <div class="inline-stat"><span class="k">Retenues source / crédit d'impôt (case {{ recap.case_credit_impot or "—" }})</span><span class="v">{{ "%.2f"|format(recap.dividendes_cto.retenues_source) }} €</span></div>
+    <div class="inline-stat"><span class="k">Plus-value {{ annee }} (case {{ recap.case_plus_value or "—" }})</span><span class="v">{{ recap.plus_value_cto.plus_value_annee|montant }} €</span></div>
+    <div class="inline-stat"><span class="k">Dividendes bruts (case {{ recap.case_dividendes or "—" }})</span><span class="v">{{ recap.dividendes_cto.dividendes_bruts|montant }} €</span></div>
+    <div class="inline-stat"><span class="k">Retenues source / crédit d'impôt (case {{ recap.case_credit_impot or "—" }})</span><span class="v">{{ recap.dividendes_cto.retenues_source|montant }} €</span></div>
 </div>
 <p class="disclaimer" style="margin-top: 0.75rem;">Limité aux comptes CTO — le PEA a un régime de différé d'imposition différent, non imposable annuellement.</p>
 

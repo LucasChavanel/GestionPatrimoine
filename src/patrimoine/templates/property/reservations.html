@@ -32,8 +32,8 @@
             <td>{{ b.nuits }}</td>
             <td>{{ b.plateforme.value }}</td>
             <td>{{ b.agency.nom if b.agency else "" }}</td>
-            <td>{{ "%.2f"|format(b.montant_brut) }} €</td>
-            <td>{{ "%.2f"|format(b.net_encaisse) }} €</td>
+            <td>{{ b.montant_brut|montant }} €</td>
+            <td>{{ b.net_encaisse|montant }} €</td>
             <td>{% if b.date_paiement %}{{ b.date_paiement }}{% else %}<span class="warning">⏳ en attente</span>{% endif %}</td>
             <td>{{ b.statut.value }}</td>
             <td>

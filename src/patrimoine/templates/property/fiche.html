@@ -55,7 +55,7 @@
 
 <div class="card">
     <div class="card-header">
-        <h2>Composants (base amortissable : {{ "%.2f"|format(property_.base_amortissable) }} €)</h2>
+        <h2>Composants (base amortissable : {{ property_.base_amortissable|montant }} €)</h2>
         <button class="btn-ghost" onclick="document.getElementById('dialog-composant').showModal()">+ Ajouter</button>
     </div>
     <div class="card-body">
