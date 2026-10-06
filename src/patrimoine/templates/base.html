@@ -32,11 +32,32 @@
             <a class="nav-item {% if request.url.path.startswith('/parametres') %}active{% endif %}" href="/parametres">
                 <span class="icon" style="--icon-src:url('/static/icons/parametres.svg')"></span>Paramètres
             </a>
+            {% if avertissements_globaux %}
+            <button type="button" class="sidebar-warning" onclick="document.getElementById('dialog-avertissements').showModal()">
+                ⚠️ {{ avertissements_globaux|length }} avertissement{{ "s" if avertissements_globaux|length > 1 else "" }}
+            </button>
+            {% endif %}
             <div class="sidebar-footer">Outil local — aucune donnée hors de cet appareil</div>
         </nav>
         <main>
             {% block content %}{% endblock %}
         </main>
     </div>
+
+    {% if avertissements_globaux %}
+    <dialog id="dialog-avertissements">
+        <article>
+            <h3>Avertissements</h3>
+            <ul class="warning" style="margin:0;">
+                {% for a in avertissements_globaux %}
+                <li>⚠️ {{ a }}</li>
+                {% endfor %}
+            </ul>
+            <footer>
+                <button type="button" class="secondary" onclick="document.getElementById('dialog-avertissements').close()">Fermer</button>
+            </footer>
+        </article>
+    </dialog>
+    {% endif %}
 </body>
 </html>

@@ -167,6 +167,29 @@ h3 { font-size: 13.5px; }
     padding-top: 14px;
 }
 
+/* Pastille cliquable dans la nav latérale, ouvre la modale listant tous les
+   avertissements (paramètres fiscaux non vérifiés, déclarations manquantes...)
+   — calculée une fois pour toute page via le context processor de deps.py,
+   jamais recalculée par chaque route. */
+.sidebar-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: auto;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--warning-tint);
+    color: var(--warning-ink);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+.sidebar-warning:hover { background: #f3e4c4; }
+
 main {
     flex: 999 1 720px;
     min-width: 0;
