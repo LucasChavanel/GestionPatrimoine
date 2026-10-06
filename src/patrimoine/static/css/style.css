@@ -141,10 +141,39 @@ form button {
 
 /* Formulaires Ajouter/Modifier déplacés en modale (<dialog>, stylisé
    nativement par Pico) plutôt que dans le flux de la page — jamais deux
-   écrans avec le formulaire à un endroit différent. */
+   écrans avec le formulaire à un endroit différent. Les variables Pico
+   (--pico-spacing, --pico-form-element-spacing-vertical) pilotent le padding
+   de <article> et la hauteur des champs par calc() — les resserrer ici
+   rétrécit toute la modale d'un coup, plutôt que de se battre champ par champ
+   contre des hauteurs fixées explicitement par Pico (le padding seul ne
+   suffit pas à réduire la hauteur d'un <input>). */
+dialog {
+    --pico-form-element-spacing-vertical: 0.4rem;
+    --pico-spacing: 0.9rem;
+}
+
+dialog article {
+    max-width: 420px;
+}
+
+dialog article h3 {
+    font-size: 1.15rem;
+    margin-bottom: 1rem;
+}
+
 dialog form {
     max-width: none;
     margin-bottom: 0;
+    gap: 0.6rem;
+}
+
+dialog form label {
+    gap: 0.15rem;
+    margin-bottom: 0;
+}
+
+dialog form input, dialog form select {
+    font-size: 0.95rem;
 }
 
 dialog footer {
