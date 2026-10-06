@@ -22,7 +22,6 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
 
     resumes_par_bien = []
     prochaines_reservations: list[Booking] = []
-    avertissements = list(load_fiscal_params(annee).unverified_warnings())
 
     for property_ in properties:
         bookings = session.exec(select(Booking).where(Booking.property_id == property_.id)).all()
@@ -58,9 +57,6 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
             if b.statut == StatutBooking.confirmee and b.date_depart >= date.today()
         )
 
-        if not property_.numero_declaration_mairie:
-            avertissements.append(f"{property_.nom} : numéro de déclaration en mairie non renseigné.")
-
     prochaines_reservations.sort(key=lambda b: b.date_arrivee)
     prochaines_reservations = prochaines_reservations[:5]
 
@@ -81,7 +77,6 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
             "resumes_par_bien": resumes_par_bien,
             "prochaines_reservations": prochaines_reservations,
             "last_backup_at": settings.last_backup_at if settings else None,
-            "avertissements": avertissements,
             "consolide": consolide,
             "historique": historique,
         },
