@@ -175,30 +175,59 @@ def ibkr_solde_ouverture(
     positions = ibkr_flex.parse_open_positions(xml_text)
     importees = 0
     deja_presentes = 0
+    depots_corriges = 0
     for position in positions:
         external_id = f"ibkr-position-{position.conid}"
-        if _transaction_existe(session, account.id, external_id):
+        depot_external_id = f"ibkr-depot-ouverture-{position.conid}"
+        montant = position.quantite * position.prix_moyen
+
+        achat_existe = _transaction_existe(session, account.id, external_id)
+        if not achat_existe:
+            security = _get_or_create_security(session, position.isin, position.symbol)
+            session.add(
+                InvestmentTransaction(
+                    account_id=account.id,
+                    security_id=security.id if security else None,
+                    date=date.today(),
+                    type=TypeTransaction.achat,
+                    quantite=position.quantite,
+                    prix_unitaire=position.prix_moyen,
+                    devise=position.devise,
+                    frais=0.0,
+                    montant=montant,
+                    description="Import IBKR — solde d'ouverture",
+                    external_id=external_id,
+                )
+            )
+            importees += 1
+        else:
             deja_presentes += 1
-            continue
-        security = _get_or_create_security(session, position.isin, position.symbol)
-        transaction = InvestmentTransaction(
-            account_id=account.id,
-            security_id=security.id if security else None,
-            date=date.today(),
-            type=TypeTransaction.achat,
-            quantite=position.quantite,
-            prix_unitaire=position.prix_moyen,
-            devise=position.devise,
-            frais=0.0,
-            montant=position.quantite * position.prix_moyen,
-            description="Import IBKR — solde d'ouverture",
-            external_id=external_id,
-        )
-        session.add(transaction)
-        importees += 1
+
+        # Dépôt synthétique de même montant : l'historique réel des versements
+        # qui ont financé cette position n'est pas récupérable via Flex, donc
+        # sans cette ligne l'achat ferait passer le cash calculé
+        # (services/patrimoine_global.py::cash_disponible) largement négatif —
+        # un solde d'ouverture n'est pas un découvert. Backfill si l'achat a
+        # été importé avant ce correctif (pas de doublon, clé externe dédiée).
+        if not _transaction_existe(session, account.id, depot_external_id):
+            session.add(
+                InvestmentTransaction(
+                    account_id=account.id,
+                    date=date.today(),
+                    type=TypeTransaction.depot,
+                    devise=position.devise,
+                    montant=montant,
+                    description="Import IBKR — dépôt synthétique associé au solde d'ouverture",
+                    external_id=depot_external_id,
+                )
+            )
+            if achat_existe:
+                depots_corriges += 1
     session.commit()
 
     resultat = f"{importees} position(s) importée(s), {deja_presentes} déjà présente(s) (ignorée(s))."
+    if depots_corriges:
+        resultat += f" {depots_corriges} dépôt(s) d'ouverture manquant(s) corrigé(s) rétroactivement."
     context = _fiche_context(session, account, ibkr_resultat=resultat)
     return templates.TemplateResponse(request, "investments/fiche.html", context)
 
