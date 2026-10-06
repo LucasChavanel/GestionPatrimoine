@@ -2,25 +2,31 @@
 {% block title %}Liquidités — Patrimoine{% endblock %}
 {% block content %}
 <h1>Liquidités</h1>
-<p>Cash hors enveloppes d'investissement (comptes courants, livrets...) — saisie manuelle, pris en compte dans le dashboard consolidé.</p>
+<p>Cash hors enveloppes d'investissement (comptes courants, livrets, comptes à terme...) — saisie manuelle, pris en compte dans le dashboard consolidé.</p>
 
 <h2>{% if holding_edit %}Modifier{% else %}Ajouter{% endif %}</h2>
 <form method="post" action="{% if holding_edit %}/liquidites/{{ holding_edit.id }}{% else %}/liquidites{% endif %}">
     <label>Nom <input type="text" name="nom" value="{{ holding_edit.nom if holding_edit else '' }}" required></label>
     <label>Solde <input type="number" step="0.01" name="solde" value="{{ holding_edit.solde if holding_edit else '' }}" required></label>
     <label>Devise <input type="text" name="devise" value="{{ holding_edit.devise if holding_edit else 'EUR' }}"></label>
+    <label>Taux (%, compte à terme) <input type="number" step="0.01" name="taux_pct" value="{{ holding_edit.taux_pct if holding_edit and holding_edit.taux_pct else '' }}"></label>
+    <label>Durée (mois, compte à terme) <input type="number" name="duree_mois" value="{{ holding_edit.duree_mois if holding_edit and holding_edit.duree_mois else '' }}"></label>
+    <label>Date de fin (compte à terme) <input type="date" name="date_fin" value="{{ holding_edit.date_fin if holding_edit and holding_edit.date_fin else '' }}"></label>
     <button type="submit">{% if holding_edit %}Enregistrer{% else %}Ajouter{% endif %}</button>
 </form>
 
 <h2>Liste</h2>
 {% if holdings %}
 <table>
-    <thead><tr><th>Nom</th><th>Solde</th><th>Mis à jour le</th><th></th></tr></thead>
+    <thead><tr><th>Nom</th><th>Solde</th><th>Taux</th><th>Durée</th><th>Date de fin</th><th>Mis à jour le</th><th></th></tr></thead>
     <tbody>
     {% for h in holdings %}
         <tr>
             <td>{{ h.nom }}</td>
             <td>{{ "%.2f"|format(h.solde) }} {{ h.devise }}</td>
+            <td>{{ h.taux_pct ~ " %" if h.taux_pct else "—" }}</td>
+            <td>{{ h.duree_mois ~ " mois" if h.duree_mois else "—" }}</td>
+            <td>{{ h.date_fin or "—" }}</td>
             <td>{{ h.date_maj }}</td>
             <td>
                 <a href="/liquidites/{{ h.id }}/modifier">Modifier</a>

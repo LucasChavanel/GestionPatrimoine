@@ -14,3 +14,9 @@ class CashHolding(SQLModel, table=True):
     solde: float
     devise: str = "EUR"
     date_maj: date
+
+    # Pertinent pour un compte à terme — laissés vides pour un compte
+    # courant/livret classique.
+    taux_pct: float | None = None
+    duree_mois: int | None = None
+    date_fin: date | None = None
