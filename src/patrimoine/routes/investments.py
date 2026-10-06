@@ -99,8 +99,10 @@ def rafraichir_cours(
 ):
     r = refresh_all_prices(session)
     resultat = f"{r.mis_a_jour} cours mis à jour, {r.echecs} échec(s)."
+    if r.tickers_resolus:
+        resultat += f" {r.tickers_resolus} ticker(s) Yahoo résolu(s) automatiquement depuis l'ISIN."
     if r.sans_ticker:
-        resultat += f" {r.sans_ticker} titre(s) sans ticker Yahoo renseigné (voir /titres)."
+        resultat += f" {r.sans_ticker} titre(s) sans ticker Yahoo trouvé (voir /titres pour le renseigner manuellement)."
     context = _fiche_context(session, account, cours_resultat=resultat)
     return templates.TemplateResponse(request, "investments/fiche.html", context)
 

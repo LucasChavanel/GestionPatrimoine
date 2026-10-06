@@ -4,7 +4,7 @@ import httpx
 from sqlmodel import Session
 
 from patrimoine.models.security import Security
-from patrimoine.services.market_data import fetch_price, refresh_all_prices
+from patrimoine.services.market_data import fetch_price, refresh_all_prices, resolve_ticker_from_isin
 
 
 def _mock_response(json_data, status_code=200):
@@ -40,6 +40,63 @@ def test_fetch_price_json_inattendu_retourne_none():
     with patch("patrimoine.services.market_data.httpx.get", return_value=_mock_response({"chart": {}})):
         prix = fetch_price("CW8.PA")
     assert prix is None
+
+
+def test_resolve_ticker_from_isin_succes():
+    payload = {
+        "quotes": [
+            {"symbol": "AEEM.PA", "isYahooFinance": True, "exchange": "PAR"},
+        ]
+    }
+    with patch("patrimoine.services.market_data.httpx.get", return_value=_mock_response(payload)):
+        ticker = resolve_ticker_from_isin("LU1681045370")
+    assert ticker == "AEEM.PA"
+
+
+def test_resolve_ticker_from_isin_aucun_resultat_retourne_none():
+    with patch(
+        "patrimoine.services.market_data.httpx.get",
+        return_value=_mock_response({"quotes": []}),
+    ):
+        ticker = resolve_ticker_from_isin("ISIN_INCONNU")
+    assert ticker is None
+
+
+def test_resolve_ticker_from_isin_ignore_les_resultats_hors_yahoo_finance():
+    payload = {"quotes": [{"symbol": "XYZ", "isYahooFinance": False}]}
+    with patch("patrimoine.services.market_data.httpx.get", return_value=_mock_response(payload)):
+        ticker = resolve_ticker_from_isin("FR0000000000")
+    assert ticker is None
+
+
+def test_resolve_ticker_from_isin_erreur_reseau_retourne_none():
+    with patch("patrimoine.services.market_data.httpx.get", side_effect=httpx.ConnectError("offline")):
+        ticker = resolve_ticker_from_isin("LU1681045370")
+    assert ticker is None
+
+
+def test_refresh_all_prices_resout_le_ticker_manquant_depuis_isin(session: Session):
+    security = Security(isin="LU1681045370", nom="AEEM")
+    session.add(security)
+    session.commit()
+
+    chart_payload = {"chart": {"result": [{"meta": {"regularMarketPrice": 5.2, "currency": "EUR"}}]}}
+    search_payload = {"quotes": [{"symbol": "AEEM.PA", "isYahooFinance": True}]}
+
+    def fake_get(url, **kwargs):
+        if "search" in url:
+            return _mock_response(search_payload)
+        return _mock_response(chart_payload)
+
+    with patch("patrimoine.services.market_data.httpx.get", side_effect=fake_get):
+        resultat = refresh_all_prices(session)
+
+    assert resultat.tickers_resolus == 1
+    assert resultat.mis_a_jour == 1
+    assert resultat.sans_ticker == 0
+    session.refresh(security)
+    assert security.ticker_yahoo == "AEEM.PA"
+    assert security.dernier_cours == 5.2
 
 
 def test_refresh_all_prices_met_a_jour_classe_sans_ticker_et_echecs(session: Session):
