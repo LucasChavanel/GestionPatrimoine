@@ -1,42 +1,183 @@
+/* Design compact, pensé pour un outil de gestion dense en données plutôt
+   qu'une page de contenu — nav latérale, cartes, formulaires en grille.
+   Remplace Pico.css (abandonné : ses espacements par défaut sont pensés
+   pour une page éditoriale, pas pour un formulaire de 15 champs). */
+
+/* IBM Plex Sans/Mono vendorisées (SIL OFL) dans static/fonts/ — jamais de
+   CDN Google Fonts, cohérent avec le principe "100% local" du projet. */
+@font-face {
+    font-family: "IBM Plex Sans";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/static/fonts/ibm-plex-sans-400.woff2") format("woff2");
+}
+@font-face {
+    font-family: "IBM Plex Sans";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("/static/fonts/ibm-plex-sans-500.woff2") format("woff2");
+}
+@font-face {
+    font-family: "IBM Plex Sans";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("/static/fonts/ibm-plex-sans-600.woff2") format("woff2");
+}
+@font-face {
+    font-family: "IBM Plex Sans";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("/static/fonts/ibm-plex-sans-700.woff2") format("woff2");
+}
+@font-face {
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("/static/fonts/ibm-plex-mono-500.woff2") format("woff2");
+}
+@font-face {
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("/static/fonts/ibm-plex-mono-600.woff2") format("woff2");
+}
+
 :root {
-    --color-bg: #f7f7f5;
-    --color-text: #1f1f1f;
-    --color-border: #ddd;
-    --color-accent: #2f5d50;
-    --color-warning: #8a5a00;
-    --color-warning-bg: #fff3e0;
+    --ink: #1b1f1c;
+    --ink-muted: #5e655f;
+    --ink-faint: #8b9289;
+    --paper: #f6f5f0;
+    --surface: #ffffff;
+    --border: #e4e1d6;
+    --border-soft: #ece9df;
+    --accent: #27553f;
+    --accent-ink: #163326;
+    --accent-tint: #e7efe7;
+    --accent-tint-strong: #d9e6da;
+    --negative: #a1402f;
+    --negative-tint: #f7ebe7;
+    --warning-ink: #85591a;
+    --warning-tint: #faf0dd;
+    --radius: 10px;
+    --radius-sm: 7px;
+    --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --shadow-card: 0 1px 2px rgba(27, 31, 28, 0.04), 0 1px 1px rgba(27, 31, 28, 0.03);
 }
 
 * { box-sizing: border-box; }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     margin: 0;
-    background: var(--color-bg);
-    color: var(--color-text);
+    font-family: var(--font-ui);
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px;
+    line-height: 1.45;
 }
 
-.main-nav {
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-ink); text-decoration: underline; }
+
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; margin: 0 0 0.5em; }
+h1 { font-size: 21px; }
+h2 { font-size: 15px; }
+h3 { font-size: 13.5px; }
+
+/* ---------- Mise en page générale : nav latérale + contenu ---------- */
+.app-shell {
     display: flex;
-    gap: 1.5rem;
-    padding: 1rem 2rem;
-    background: var(--color-accent);
+    min-height: 100vh;
+    width: 100%;
+    align-items: flex-start;
 }
 
-.main-nav a {
-    color: white;
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-flex;
+.sidebar {
+    width: 216px;
+    flex: 0 0 216px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 12px;
+    gap: 2px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.sidebar-brand {
+    display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 8px;
+    padding: 4px 10px 20px;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+}
+
+.sidebar-brand .mark {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: var(--accent);
+    flex: 0 0 auto;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-muted) !important;
+    border-left: 2px solid transparent;
+    text-decoration: none !important;
+}
+
+.nav-item .icon { width: 1rem; height: 1rem; opacity: 0.75; }
+
+.nav-item.active {
+    background: var(--accent-tint);
+    color: var(--accent-ink) !important;
+    font-weight: 600;
+    border-left: 2px solid var(--accent);
+    margin-left: -2px;
+}
+
+.nav-item.active .icon { opacity: 1; }
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 10px;
+    font-size: 11px;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--border-soft);
+    padding-top: 14px;
+}
+
+main {
+    flex: 999 1 720px;
+    min-width: 0;
+    padding: 28px 36px 60px;
+    max-width: 1180px;
 }
 
 /* Icônes SVG vendorisées (Tabler Icons, MIT), posées via
    <span class="icon" style="--icon-src:url(...)">. Un masque CSS avec
    background-color: currentColor permet à l'icône de suivre la couleur du
-   texte environnant (ce que ferait stroke="currentColor" dans le SVG si on
-   l'affichait en inline, mais pas via une image externe). */
+   texte environnant. */
 .icon {
     display: inline-block;
     width: 1.1em;
@@ -53,76 +194,107 @@ body {
     -webkit-mask-position: center;
 }
 
-main {
-    max-width: 960px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-}
-
-.current-property {
-    font-size: 0.9rem;
-    color: #555;
-    margin-bottom: 0.5rem;
-}
-
-.current-property a {
-    color: var(--color-accent);
-}
-
-.sub-nav {
+.page-header {
     display: flex;
+    align-items: baseline;
+    justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 4px;
 }
 
-.sub-nav a {
-    color: var(--color-accent);
-    text-decoration: none;
+.page-header h1 { margin: 0; }
+
+.page-subtitle {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: 2px 0 22px;
+}
+
+.section-title {
+    font-size: 11px;
     font-weight: 600;
-    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin: 28px 0 10px;
+}
+.section-title:first-child { margin-top: 0; }
+
+.breadcrumb {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 2px;
+}
+.breadcrumb a { color: var(--ink-faint); }
+.breadcrumb strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- Onglets (sous-nav) ---------- */
+.tabs {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    margin: 14px 0 22px;
 }
 
+.tabs a {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-faint) !important;
+    text-decoration: none !important;
+    padding: 8px 12px;
+    border-bottom: 2px solid transparent;
+}
+
+.tabs a:hover { color: var(--ink) !important; }
+
+.tabs a.active {
+    color: var(--accent-ink) !important;
+    border-bottom: 2px solid var(--accent);
+}
+
+/* ---------- Bannières / avertissements ---------- */
 .disclaimer, .warning {
-    background: var(--color-warning-bg);
-    color: var(--color-warning);
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--warning-tint);
+    color: var(--warning-ink);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 12.5px;
 }
 
-form {
+ul.warning { display: block; list-style: none; margin: 0 0 1rem; padding: 0; }
+ul.warning li { display: flex; align-items: center; gap: 8px; padding: 6px 12px; }
+
+/* ---------- Cartes ---------- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    margin-bottom: 18px;
+}
+
+.card-header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
-    max-width: 480px;
-    margin-bottom: 1.5rem;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-soft);
 }
 
-form label {
+.card-header h2, .card-header h3 { margin: 0; }
+
+.card-body { padding: 16px 18px 18px; }
+.card-footer {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.9rem;
-    color: #444;
-}
-
-form input, form select {
-    padding: 0.4rem;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    font-size: 1rem;
-}
-
-form button {
-    align-self: flex-start;
-    background: var(--color-accent);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border-soft);
 }
 
 /* En-tête d'une section liste : titre + bouton "+ Ajouter" toujours au même
@@ -131,102 +303,251 @@ form button {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.75rem;
     margin-top: 2rem;
     margin-bottom: 1rem;
 }
+.section-header:first-child { margin-top: 0; }
+.section-header h2, .section-header h1 { margin: 0; }
+.section-header > span { display: flex; gap: 8px; }
 
-.section-header h2 {
+/* ---------- Formulaires en grille ---------- */
+form { margin: 0; }
+
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 14px;
+}
+
+.field-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.field, form > label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Filet de sécurité pour un formulaire hors .field-grid/dialog avec
+   plusieurs champs empilés (ex. un filtre à 2 champs) : espace entre eux
+   sans dépendre d'un conteneur flex explicite sur le <form>. */
+form > label + label,
+form > label + div,
+form > div + label {
+    margin-top: 10px;
+}
+
+.field.span-2 { grid-column: span 2; }
+.field.span-3 { grid-column: span 3; }
+
+.field label, form > label, label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-muted);
+}
+
+input, select, textarea {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    padding: 7px 9px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--paper);
+    color: var(--ink);
+    height: 32px;
+    width: 100%;
+}
+
+textarea { height: auto; }
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--accent-tint);
+}
+
+input[type="checkbox"] { width: auto; height: auto; }
+
+label:has(input[type="checkbox"]) {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+/* ---------- Boutons ---------- */
+button, .btn {
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 7px 13px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent);
+    color: #fff;
+}
+
+button:hover, .btn:hover { background: var(--accent-ink); }
+
+button.secondary, .btn-secondary {
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--border);
+}
+button.secondary:hover, .btn-secondary:hover { background: var(--paper); color: var(--ink); }
+
+.btn-ghost { background: transparent; color: var(--accent-ink); border-color: var(--border); }
+.btn-ghost:hover { background: var(--accent-tint); }
+
+/* ---------- Cartes de synthèse (dashboard) ---------- */
+.stat-grid, .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin: 0 0 1rem;
+}
+
+.stat-card, .card.stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-card);
+}
+
+.stat-label, .stat-card h2 {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin: 0 0 6px;
+}
+
+.stat-value, .stat-card .amount, .amount {
+    font-family: var(--font-mono);
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
     margin: 0;
 }
 
-/* Formulaires Ajouter/Modifier déplacés en modale (<dialog>, stylisé
-   nativement par Pico) plutôt que dans le flux de la page — jamais deux
-   écrans avec le formulaire à un endroit différent. Les variables Pico
-   (--pico-spacing, --pico-form-element-spacing-vertical) pilotent le padding
-   de <article> et la hauteur des champs par calc() — les resserrer ici
-   rétrécit toute la modale d'un coup, plutôt que de se battre champ par champ
-   contre des hauteurs fixées explicitement par Pico (le padding seul ne
-   suffit pas à réduire la hauteur d'un <input>). */
-dialog {
-    --pico-form-element-spacing-vertical: 0.4rem;
-    --pico-spacing: 0.9rem;
+.stat-value.negative, .amount.negative { color: var(--negative); }
+
+.stat-sub {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 4px;
+    font-family: var(--font-mono);
 }
 
-dialog article {
-    max-width: 420px;
-}
-
-dialog article h3 {
-    font-size: 1.15rem;
+.inline-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    box-shadow: var(--shadow-card);
     margin-bottom: 1rem;
 }
 
-dialog form {
-    max-width: none;
-    margin-bottom: 0;
-    gap: 0.6rem;
-}
+.inline-stat { display: flex; flex-direction: column; gap: 2px; }
+.inline-stat .k { font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.inline-stat .v { font-family: var(--font-mono); font-size: 14px; font-weight: 600; }
 
-dialog form label {
-    gap: 0.15rem;
-    margin-bottom: 0;
-}
-
-dialog form input, dialog form select {
-    font-size: 0.95rem;
-}
-
-dialog footer {
+.property-row {
     display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-card);
 }
 
-.summary-cards {
-    display: flex;
-    gap: 1rem;
-    margin: 1.5rem 0;
-}
-
-.card {
-    flex: 1;
-    background: white;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 1rem;
-}
-
-.card h2 {
-    margin: 0 0 0.5rem;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    color: #666;
-}
-
-.card .amount {
-    font-size: 1.6rem;
-    font-weight: 700;
-    margin: 0;
-}
+.property-row .name { flex: 1 1 200px; font-weight: 600; font-size: 13.5px; }
+.property-row .metric { display: flex; flex-direction: column; gap: 1px; min-width: 100px; }
+.property-row .metric .k { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.property-row .metric .v { font-family: var(--font-mono); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .chart-container {
     position: relative;
-    height: 280px;
-    margin-bottom: 1.5rem;
+    height: 220px;
+    margin-bottom: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-card);
 }
 
+/* ---------- Tableaux ---------- */
 table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 12.5px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
 }
 
 th, td {
     text-align: left;
-    padding: 0.5rem;
-    border-bottom: 1px solid var(--color-border);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-soft);
 }
 
+th {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+    background: var(--paper);
+}
+
+tr:last-child td { border-bottom: none; }
+
+/* ---------- Modales (Ajouter/Modifier) ---------- */
+dialog {
+    border: none;
+    border-radius: var(--radius);
+    padding: 0;
+    max-width: 440px;
+    width: 92vw;
+    box-shadow: 0 12px 32px rgba(27, 31, 28, 0.18);
+    background: var(--surface);
+}
+
+dialog::backdrop { background: rgba(27, 31, 28, 0.35); }
+
+dialog article { padding: 20px 22px; }
+
+dialog h3 { margin: 0 0 16px; font-size: 15px; }
+
+dialog form { display: flex; flex-direction: column; gap: 10px; }
+
+dialog footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+/* ---------- Calendrier ---------- */
 .calendar-nav {
     display: flex;
     justify-content: space-between;
@@ -234,49 +555,23 @@ th, td {
     margin-bottom: 1rem;
 }
 
-table.calendar {
-    table-layout: fixed;
-    width: 100%;
-}
+table.calendar { table-layout: fixed; width: 100%; }
+table.calendar th { text-align: center; }
 
-table.calendar th {
-    text-align: center;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.calendar-cell {
-    vertical-align: top;
-    height: 5rem;
-    border: 1px solid var(--color-border);
-    padding: 0.25rem;
-}
-
-.calendar-cell.empty {
-    background: #fafafa;
-    border: none;
-}
-
-.calendar-day-num {
-    font-size: 0.8rem;
-    color: #888;
-}
+.calendar-cell { vertical-align: top; height: 5rem; border: 1px solid var(--border-soft); padding: 0.25rem; }
+.calendar-cell.empty { background: var(--paper); border: none; }
+.calendar-day-num { font-size: 0.75rem; color: var(--ink-faint); }
 
 .calendar-booking {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     padding: 0.1rem 0.3rem;
     border-radius: 3px;
     margin-top: 0.2rem;
     color: white;
 }
 
-.calendar-booking-confirmee {
-    background: var(--color-accent);
-}
-
-.calendar-booking-annulee {
-    background: #999;
-    text-decoration: line-through;
-}
+.calendar-booking-confirmee { background: var(--accent); }
+.calendar-booking-annulee { background: var(--ink-faint); text-decoration: line-through; }
 
 .calendar-legend {
     display: inline-block;
@@ -284,5 +579,11 @@ table.calendar th {
     border-radius: 3px;
     color: white;
     margin-right: 0.5rem;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
+
+/* ---------- Pièces jointes (widget compact dans une cellule de tableau) ---------- */
+.attachments { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.attachments a { font-size: 12px; }
+.attachments button { padding: 2px 7px; font-size: 11px; }
+.attachments input[type="file"] { height: auto; padding: 2px; font-size: 11px; width: auto; }

@@ -3,46 +3,45 @@
 {% block content %}
 <h1>Paramètres</h1>
 
-<section>
-    <h2>Sauvegarde</h2>
-    <p>
-        Dernière sauvegarde :
-        {% if last_backup_at %}{{ last_backup_at }}{% else %}jamais effectuée{% endif %}
-    </p>
+<div class="card">
+    <div class="card-header"><h2>Sauvegarde</h2></div>
+    <div class="card-body">
+        <p style="margin-top:0">Dernière sauvegarde : {% if last_backup_at %}{{ last_backup_at }}{% else %}jamais effectuée{% endif %}</p>
 
-    <h3>Exporter une sauvegarde chiffrée</h3>
-    <form method="post" action="/parametres/export">
-        <label>Mot de passe <input type="password" name="password" required></label>
-        <button type="submit">Télécharger la sauvegarde (.zip chiffré AES-256)</button>
-    </form>
+        <h3>Exporter une sauvegarde chiffrée</h3>
+        <form method="post" action="/parametres/export">
+            <label>Mot de passe <input type="password" name="password" required></label>
+            <button type="submit">Télécharger la sauvegarde (.zip chiffré AES-256)</button>
+        </form>
 
-    <h3>Restaurer depuis une sauvegarde</h3>
-    <p class="warning">⚠️ Opération destructive : remplace la base et les documents actuels (les anciens sont renommés, pas supprimés).</p>
-    {% if erreur_restauration %}
-    <p class="warning">⚠️ {{ erreur_restauration }}</p>
-    {% endif %}
-    <form method="post" action="/parametres/import" enctype="multipart/form-data">
-        <label>Archive (.zip) <input type="file" name="archive" accept=".zip" required></label>
-        <label>Mot de passe <input type="password" name="password" required></label>
-        <button type="submit">Restaurer</button>
-    </form>
-</section>
+        <h3 style="margin-top:1.25rem">Restaurer depuis une sauvegarde</h3>
+        <p class="warning">⚠️ Opération destructive : remplace la base et les documents actuels (les anciens sont renommés, pas supprimés).</p>
+        {% if erreur_restauration %}
+        <p class="warning">⚠️ {{ erreur_restauration }}</p>
+        {% endif %}
+        <form method="post" action="/parametres/import" enctype="multipart/form-data">
+            <label>Archive (.zip) <input type="file" name="archive" accept=".zip" required></label>
+            <label>Mot de passe <input type="password" name="password" required></label>
+            <button type="submit" class="secondary">Restaurer</button>
+        </form>
+    </div>
+</div>
 
-<section>
-    <h2>IBKR (préparation)</h2>
-    <p>
-        Identifiants du Flex Web Service, stockés dans le Trousseau macOS (jamais en base ni dans le dépôt).
-        La récupération automatique des positions/opérations IBKR n'est pas encore implémentée — elle
-        nécessite un token et un Query ID réels pour être testée.
-    </p>
-    <p>
-        Token : {% if ibkr_token_configure %}configuré{% else %}non configuré{% endif %} —
-        Query ID : {% if ibkr_query_id_configure %}configuré{% else %}non configuré{% endif %}
-    </p>
-    <form method="post" action="/parametres/ibkr">
-        <label>Token Flex Web Service <input type="password" name="token" placeholder="laisser vide pour ne pas modifier"></label>
-        <label>Query ID <input type="password" name="query_id" placeholder="laisser vide pour ne pas modifier"></label>
-        <button type="submit">Enregistrer</button>
-    </form>
-</section>
+<div class="card">
+    <div class="card-header"><h2>IBKR (préparation)</h2></div>
+    <div class="card-body">
+        <p style="margin-top:0">
+            Identifiants du Flex Web Service, stockés dans le Trousseau macOS (jamais en base ni dans le dépôt).
+        </p>
+        <p>
+            Token : {% if ibkr_token_configure %}configuré{% else %}non configuré{% endif %} —
+            Query ID : {% if ibkr_query_id_configure %}configuré{% else %}non configuré{% endif %}
+        </p>
+        <form method="post" action="/parametres/ibkr">
+            <label>Token Flex Web Service <input type="password" name="token" placeholder="laisser vide pour ne pas modifier"></label>
+            <label>Query ID <input type="password" name="query_id" placeholder="laisser vide pour ne pas modifier"></label>
+            <button type="submit">Enregistrer</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
