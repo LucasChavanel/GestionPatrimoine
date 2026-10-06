@@ -6,8 +6,12 @@ en base — l'app reste utilisable hors ligne."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 
 import httpx
+from sqlmodel import Session, select
+
+from ..models.security import Security
 
 YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
 USER_AGENT = "Mozilla/5.0 (compatible; Patrimoine/1.0; usage personnel)"
@@ -38,3 +42,33 @@ def fetch_price(ticker_yahoo: str) -> PrixRecupere | None:
         return PrixRecupere(prix=float(prix), devise=str(devise))
     except Exception:
         return None
+
+
+@dataclass
+class RafraichissementResultat:
+    mis_a_jour: int = 0
+    echecs: int = 0
+    sans_ticker: int = 0
+
+
+def refresh_all_prices(session: Session) -> RafraichissementResultat:
+    """Rafraîchit tous les titres ayant un ticker Yahoo renseigné — utilisé par
+    les boutons manuels ET par le rafraîchissement automatique au lancement
+    (voir main.py::run), toujours la même logique, jamais dupliquée."""
+    resultat = RafraichissementResultat()
+    securities = session.exec(select(Security)).all()
+    for security in securities:
+        if not security.ticker_yahoo:
+            resultat.sans_ticker += 1
+            continue
+        prix = fetch_price(security.ticker_yahoo)
+        if prix is None:
+            resultat.echecs += 1
+            continue
+        security.dernier_cours = prix.prix
+        security.dernier_cours_devise = prix.devise
+        security.dernier_cours_date = date.today()
+        session.add(security)
+        resultat.mis_a_jour += 1
+    session.commit()
+    return resultat

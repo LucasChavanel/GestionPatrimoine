@@ -8,6 +8,7 @@ from patrimoine.models.enums import TypeTransaction
 from patrimoine.models.investment_account import InvestmentAccount
 from patrimoine.models.investment_transaction import InvestmentTransaction
 from patrimoine.services.ibkr_credentials import IbkrCredentials
+from patrimoine.services.market_data import PrixRecupere
 from patrimoine.services.patrimoine_global import cash_disponible
 
 REPORT_XML = """<FlexQueryResponse queryName="Test" type="AF">
@@ -42,7 +43,7 @@ def test_solde_ouverture_cree_un_depot_compensatoire(client):
         "patrimoine.routes.investments.get_credentials",
         return_value=IbkrCredentials(token="tok", query_id="123"),
     ):
-        with patch("patrimoine.routes.investments.ibkr_flex.fetch_report", return_value=REPORT_XML):
+        with patch("patrimoine.services.ibkr_sync.ibkr_flex.fetch_report", return_value=REPORT_XML):
             r = client.post(f"/investissements/{account_id}/ibkr/solde-ouverture")
 
     assert r.status_code == 200
@@ -68,7 +69,7 @@ def test_solde_ouverture_idempotent_pas_de_doublon(client):
         "patrimoine.routes.investments.get_credentials",
         return_value=IbkrCredentials(token="tok", query_id="123"),
     ):
-        with patch("patrimoine.routes.investments.ibkr_flex.fetch_report", return_value=REPORT_XML):
+        with patch("patrimoine.services.ibkr_sync.ibkr_flex.fetch_report", return_value=REPORT_XML):
             client.post(f"/investissements/{account_id}/ibkr/solde-ouverture")
             r2 = client.post(f"/investissements/{account_id}/ibkr/solde-ouverture")
 
@@ -104,7 +105,7 @@ def test_solde_ouverture_backfill_depot_manquant_sur_import_pre_correctif(client
         "patrimoine.routes.investments.get_credentials",
         return_value=IbkrCredentials(token="tok", query_id="123"),
     ):
-        with patch("patrimoine.routes.investments.ibkr_flex.fetch_report", return_value=REPORT_XML):
+        with patch("patrimoine.services.ibkr_sync.ibkr_flex.fetch_report", return_value=REPORT_XML):
             r = client.post(f"/investissements/{account_id}/ibkr/solde-ouverture")
 
     assert "1 déjà présente(s)" in r.text
@@ -115,3 +116,16 @@ def test_solde_ouverture_backfill_depot_manquant_sur_import_pre_correctif(client
     with Session(db.get_engine()) as s:
         compte = s.get(InvestmentAccount, account_id)
         assert cash_disponible(s, compte) == 0.0
+
+
+def test_rafraichir_cours_depuis_la_fiche_compte_affiche_le_resume(client):
+    account_id = _creer_compte_ibkr(client)
+
+    with patch(
+        "patrimoine.services.market_data.fetch_price",
+        return_value=PrixRecupere(prix=10.0, devise="EUR"),
+    ):
+        r = client.post(f"/investissements/{account_id}/rafraichir-cours")
+
+    assert r.status_code == 200
+    assert "cours mis à jour" in r.text

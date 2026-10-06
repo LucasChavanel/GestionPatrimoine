@@ -107,6 +107,9 @@
         <button type="submit" class="secondary">Rafraîchir les cours (Yahoo Finance)</button>
     </form>
 </div>
+{% if cours_resultat %}
+<p>{{ cours_resultat }}</p>
+{% endif %}
 {% if positions %}
 <table>
     <thead><tr><th>Titre</th><th>ISIN</th><th>Quantité détenue</th><th>PRMP</th><th>Montant investi</th><th>Dernier cours</th></tr></thead>

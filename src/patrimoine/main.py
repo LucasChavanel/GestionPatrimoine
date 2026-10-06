@@ -9,8 +9,11 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from sqlmodel import Session, select
 
 from . import db
+from .models.enums import Courtier
+from .models.investment_account import InvestmentAccount
 from .routes import (
     agencies,
     attachments,
@@ -33,6 +36,9 @@ from .routes.investments import router_compte as investments_compte_router
 from .routes.investments import router_liste as investments_liste_router
 from .routes.property import router_fiche as property_fiche_router
 from .routes.property import router_liste as property_liste_router
+from .services.ibkr_credentials import get_credentials
+from .services.ibkr_sync import sync_operations
+from .services.market_data import refresh_all_prices
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 DEFAULT_PORT = 8451
@@ -86,12 +92,32 @@ def _open_browser_when_ready(port: int) -> None:
         time.sleep(0.1)
 
 
+def _refresh_market_data_at_startup() -> None:
+    """Rafraîchit les cours Yahoo Finance et synchronise les opérations IBKR en
+    tâche de fond au lancement — ne doit jamais bloquer le démarrage du
+    serveur ni faire planter l'app en cas d'échec réseau."""
+    try:
+        with Session(db.get_engine()) as session:
+            refresh_all_prices(session)
+            accounts = session.exec(
+                select(InvestmentAccount).where(InvestmentAccount.courtier == Courtier.ibkr)
+            ).all()
+            if accounts:
+                creds = get_credentials()
+                for account in accounts:
+                    sync_operations(session, account, creds)
+    except Exception:
+        pass
+
+
 def run() -> None:
     """Point d'entrée `uv run patrimoine` : migre la base, lance le serveur sur
-    127.0.0.1 uniquement, et ouvre le navigateur automatiquement."""
+    127.0.0.1 uniquement, ouvre le navigateur automatiquement, et rafraîchit
+    les cours/opérations IBKR en tâche de fond."""
     db.run_migrations()
     port = _find_free_port(DEFAULT_PORT)
     threading.Thread(target=_open_browser_when_ready, args=(port,), daemon=True).start()
+    threading.Thread(target=_refresh_market_data_at_startup, daemon=True).start()
     uvicorn.run(app, host="127.0.0.1", port=port)
 
 
